@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+	<!-- Options -->
+	<string name="option_header_cg">Capital Gains</string>
+	<string name="option_label_IDLU">Remove destroyed items from inventory</string>
+
+	<string name="power_header_resources">RESOURCES</string>
+
+	<string name="library_recordtype_empty_resource">&#171; New Resource &#187;</string>
+	<string name="ref_type_resource">Resource</string>
+	<string name="resource_limit_label">Limit</string>
+	<string name="resource_gain_period_label">Gain on</string>
+	<string name="resource_loss_period_label">Lose on</string>
+	<string name="resource_sharing_label">Share with</string>
+
+	<string name="power_menu_addresource">Add Resource</string>
+	<string name="power_label_resource">Rsrc</string>
+
+	<string name="power_title_resource">Spell/Ability Resource</string>
+	<string name="power_header_operation_mode">OPERATION/MODE/RESOURCE</string>
+	<string name="power_operation_spend">Spend</string>
+	<string name="power_operation_gain">Gain</string>
+	<string name="power_mode_fixed">Fixed</string>
+	<string name="power_mode_variable">Variable</string>
+	<string name="power_resource_all_label">All?</string>
+	<string name="power_header_fixed_value">DICE + MULTIPLIER x STAT + BONUS</string>
+	<string name="power_header_variable_value">VALUE</string>
+	<string name="power_resource_range_label">Variable?</string>
+	<string name="power_header_range_value">MIN/MAX/INTERVAL</string>
+
+	<string name="resource_action_text_all">all</string>
+	<string name="resource_action_text_full_range">%d (%d-%d)</string>
+	<string name="resource_action_text_half_range">%d (%d+)</string>
+	<string name="resource_action_text_spend">Spend %s %s</string>
+	<string name="resource_action_text_gain">Gain %s %s</string>
+	<string name="resource_action_text_insufficient">Insufficient %s: (%d/%d)</string>
+	
+	<string name="resource_action_result_all">ALL</string>
+	<string name="resource_action_result_spend_short">%s -> [SPEND]</string>
+	<string name="resource_action_result_spend_long">%s [%s] -> [SPEND][%d REMAINING]</string>
+	<string name="resource_action_result_insufficient">%s [%d] -> [SPEND][INSUFFICIENT][%d REMAINING]</string>
+	<string name="resource_action_result_gain_short">%s -> [GAIN]</string>
+	<string name="resource_action_result_gain_long">%s [%s] -> [GAIN][%d TOTAL]</string>
+	<string name="resource_action_result_no_limit">%s [ALL] -> [GAIN][NO RESOURCE LIMIT][%d TOTAL]</string>
+	<string name="resource_action_result_loss_short">%s -> [LOSS]</string>
+	<string name="resource_action_result_loss_long">%s [%s] -> [LOSS][%d TOTAL]</string>
+	
+
+	<string name="item_discharge_roll">Roll</string>
+	<string name="label_item_destroy_on">Destroy On</string>
+	<string name="label_item_recharge_on">Recharge On</string>
+
+	<string name="item_label_miscellaneous">MISCELLANEOUS</string>
+	<string name="item_label_display_group">Display Group</string>
+	<string name="item_label_power_group">Power Group</string>
+
+	<string name="item_group_send_to_top">Move Under Weapons</string>
+	<string name="item_group_send_to_bottom">Move Under Powers</string>
+</root>

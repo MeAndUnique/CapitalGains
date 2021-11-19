@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+	<windowclass name="npc_combat" merge="join">
+		<script file="campaign/scripts/npc_main.lua" />
+		<sheetdata>
+			<header_column name="header_resources" insertbefore="header_traits">
+				<static textres="power_header_resources"/>
+			</header_column>
+			<button_iedit name="resources_iedit">
+				<anchored to="header_resources" position="righthigh" offset="-20,0" />
+				<target>resources</target>
+			</button_iedit>
+			<button_iadd name="resources_iadd">
+				<anchored to="resources_iedit" position="lefthigh" offset="5,0" />
+				<target>resources</target>
+			</button_iadd>
+			<windowlist name="resources" insertbefore="header_traits">
+				<script>
+					function addEntry(bFocus)
+						local w = createWindow();
+						if bFocus then
+							w.name.setFocus();
+						end
+						return w;
+					end
+					function update(bEditMode)
+						for _,w in pairs(getWindows()) do
+							w.idelete.setVisibility(bEditMode);
+						end
+					end
+				</script>
+				<anchored>
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="7" />
+					<left offset="0" />
+					<right offset="-5" />
+				</anchored>
+				<skipempty />
+				<datasource>.resources</datasource>
+				<class>resource_item</class>
+				<columns width="192" fillwidth="true" />
+				<sortby><field>name</field></sortby>
+				<noscroll />
+				<allowcreate />
+				<allowdelete />
+				<footer>footer_wide</footer>
+			</windowlist>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="npc_power" merge="join">
+		<sheetdata>
+			<stringfield name="name">
+				<script>
+					function onDoubleClick(x, y)
+						local sName = getValue();
+						local sValue, sResource = sName:match("%((%d) ([^%)]+)%)");
+						local nodeActor = DB.getChild(getDatabaseNode(), "....");
+						for _,nodeResource in pairs(DB.getChildren(nodeActor, "resources")) do
+							if sResource == DB.getValue(nodeResource, "name") then
+								rActor = ActorManager.resolveActor(nodeActor)
+								local rAction = {};
+								rAction.type = "resource";
+								rAction.operation = "";
+								rAction.label = sName;
+								rAction.resource = sResource;
+								rAction.modifier = tonumber(sValue);
+								rAction.dice = {};
+								rRoll = ActionResource.getRoll(rActor, rAction);
+								if rRoll then
+									ActionsManager.performMultiAction(nil, rActor, rRoll.sType, {rRoll});
+								end
+							end
+						end
+					end
+				</script>
+			</stringfield>
+		</sheetdata>
+	</windowclass>
+</root>

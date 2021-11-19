@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+	<windowclass name="power_page" merge="join">
+		<script file="campaign/scripts/power_page.lua" />
+	</windowclass>
+
+	<windowclass name="power_item" merge="join">
+		<script>
+			function onInit()
+				if super and super.onInit then
+					super.onInit();
+				end
+				if not windowlist.isReadOnly() then
+					registerMenuItem(Interface.getString("power_menu_addresource"), "coins", 3, 1);
+				end
+			end
+			function onMenuSelection(selection, subselection)
+				if super and super.onMenuSelection then
+					super.onMenuSelection(selection, subselection);
+				end
+				if selection == 3 and subselection == 1 then
+					createAction("resource");
+					activatedetail.setValue(1);
+				end
+			end
+		</script>
+	</windowclass>
+
+	<windowclass name="power_action_mini" merge="join">
+		<script file="campaign/scripts/power_action_mini.lua" />
+	</windowclass>
+
+	<windowclass name="power_action" merge="join">
+		<script file="campaign/scripts/power_action.lua" />
+		<sheetdata>
+			<!-- RESOURCE -->
+			<button_poweraction name="resourcebutton">
+				<anchored position="insidetopleft" offset="2,2" />
+				<icon normal="button_action_modifier" pressed="button_action_modifier_down" />
+			</button_poweraction>
+			<label name="resourcelabel">
+				<anchored to="resourcebutton" position="righthigh" offset="5,0" width="35" />
+				<static textres="power_label_resource" />
+			</label>
+			<string_poweractionview name="resourceview">
+				<anchored to="resourcelabel" position="righthigh" offset="20,0">
+					<right parent="" offset="-55" />
+				</anchored>
+				<script>
+					function onWheel(notches)
+						if Input.isControlPressed() then
+							local node = window.getDatabaseNode();
+							if DB.getValue(node, "variable", 0) == 1 then
+								local nModifier = DB.getValue(node, "modifier", 0);
+								local nMin = DB.getValue(node, "min", 0);
+								local nMax = DB.getValue(node, "max", 0);
+								local nInternval = DB.getValue(node, "interval", 0);
+								nModifier = nModifier + (notches * nInternval);
+								nModifier = math.max(nMin, nModifier);
+								if nMax > 0 then
+									nModifier = math.min(nMax, nModifier);
+								end
+								DB.setValue(node, "modifier", "number", nModifier);
+							end
+						end
+						return true;
+					end
+				</script>
+			</string_poweractionview>
+			<button_poweractioneditor name="resourcedetail">
+				<editor>power_resource_editor</editor>
+			</button_poweractioneditor>
+		</sheetdata>
+	</windowclass>
+</root>

@@ -1,0 +1,580 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+	<windowclass name="resource_item">
+		<margins control="3,0,3,5" />
+		<sheetdata>
+			<genericcontrol name="rightanchor">
+				<anchored width="0" height="0">
+					<top />
+					<right />
+				</anchored>
+				<invisible />
+			</genericcontrol>
+			<button_idelete name="idelete">
+				<anchored to="rightanchor">
+					<top offset="5" />
+					<right anchor="left" relation="relative" offset="-2" />
+				</anchored>
+			</button_idelete>
+			<button_details name="activatedetail">
+				<anchored to="rightanchor">
+					<top offset="5" />
+					<right anchor="left" relation="relative" offset="-3" />
+				</anchored>
+				<script>
+					function onButtonPress()
+						Interface.openWindow("resource_editor", window.getDatabaseNode());
+					end
+				</script>
+			</button_details>
+
+			<genericcontrol name="leftanchor">
+				<anchored width="0" height="0">
+					<top />
+					<left />
+				</anchored>
+				<invisible />
+			</genericcontrol>
+			<basicnumber name="current">
+				<anchored to="leftanchor" width="20" height="20">
+					<top offset="5" />
+					<left anchor="right" relation="relative" />
+				</anchored>
+			</basicnumber>
+			<label name="divisor">
+				<anchored to="leftanchor" width="5">
+					<top offset="5" />
+					<left anchor="right" relation="relative" offset="5" />
+				</anchored>
+				<static>/</static>
+			</label>
+			<hn name="limit">
+				<script>
+					function onInit()
+						onValueChanged();
+					end
+					function onValueChanged()
+						local value = "∞";
+						if getValue() ~= 0 then value = tostring(getValue()) end
+						window.limitdisplay.setValue(value);
+					end
+				</script>
+			</hn>
+			<stringcontrol name="limitdisplay">
+				<anchored to="leftanchor" height="20">
+					<top offset="5" />
+					<left anchor="right" relation="relative" offset="3" />
+				</anchored>
+				<font>sheetlabel</font>
+				<nodrag />
+				<readonly />
+			</stringcontrol>
+
+			<stringu name="name">
+				<anchored height="20">
+					<top offset="5" />
+					<left parent="leftanchor" anchor="right" relation="relative" offset="5" />
+					<right parent="rightanchor" anchor="left" relation="relative" offset="0" />
+				</anchored>
+			</stringu>
+		</sheetdata>
+	</windowclass>
+	
+	<windowclass name="resource_editor">
+		<frame>recordsheet</frame>
+		<placement>
+			<size width="350" height="350" />
+		</placement>
+		<sizelimits>
+			<minimum width="300" height="300" />
+			<dynamic />
+		</sizelimits>
+		<minimize>minimized_reference</minimize>
+		<tooltip field="name" />
+		<nodelete />
+		<sheetdata>
+			<hs name="type" />
+
+			<sub_record_header name="header">
+				<class>resource_header</class>
+			</sub_record_header>
+
+			<frame_record_content name="contentframe" />
+
+			<subwindow_record name="main">
+				<class>resource_editor_main</class>
+				<activate />
+				<fastinit />
+			</subwindow_record>
+
+			<scrollbar_record>
+				<target>main</target>
+			</scrollbar_record>
+			
+			<resize_recordsheet />
+			<close_recordsheet />
+		</sheetdata>
+	</windowclass>
+	<windowclass name="resource_header">
+		<margins control="0,0,0,2" />
+		<script>
+			function onInit()
+				update();
+			end
+			function update()
+				local bReadOnly = WindowManager.getReadOnlyState(getDatabaseNode());
+				name.setReadOnly(bReadOnly);
+			end
+		</script>
+		<sheetdata>
+			<link_record_header>
+				<class>resource_editor</class>
+			</link_record_header>
+
+			<anchor_record_header_right />
+			<icon_record_locked />
+			<button_record_locked />
+
+			<string_record_name name="name">
+				<empty textres="library_recordtype_empty_resource" />
+			</string_record_name>
+			<label_reftype name="reftype">
+				<static textres="ref_type_resource" />
+			</label_reftype>	
+		</sheetdata>
+	</windowclass>
+	<windowclass name="resource_editor_main">
+		<script file="campaign/scripts/resource_editor.lua" />
+		<sheetdata>
+			<anchor_column name="columnanchor" />
+
+			<label name="limitlabel">
+				<anchored to="columnanchor" height="20">
+					<left offset="5" />
+					<top anchor="bottom" relation="relative" offset="7" />
+				</anchored>
+				<static textres="resource_limit_label" />
+			</label>
+			<basicnumber name="limit">
+				<anchored to="limitlabel" position="righthigh" width="20" height="20" offset="10,0" />
+				<minvalue>0</minvalue>
+			</basicnumber>
+
+			<line_column name="divider" />
+
+			<!-- Gain -->
+			<label name="gainperiodlabel">
+				<anchored to="columnanchor" height="20">
+					<left offset="5" />
+					<top anchor="bottom" relation="relative" offset="5" />
+				</anchored>
+				<static textres="resource_gain_period_label" />
+			</label>
+			<combobox name="gainperiod">
+				<anchored to="gainperiodlabel" position="righthigh" width="100" height="20" offset="10,0" />
+				<listdirection>down</listdirection>
+				<listmaxsize>12</listmaxsize>
+			</combobox>
+			<label name="label_gainall">
+				<anchored to="gainperiod" position="righthigh" offset="15,0" height="20" />
+				<static textres="power_resource_all_label" />
+			</label>
+			<button_checkbox name="gainall">
+				<anchored to="label_gainall" position="righthigh" offset="0,0" width="20" height="20" />
+			</button_checkbox>
+
+			<genericcontrol name="gainanchor">
+				<anchored width="0" height="0">
+					<left offset="20" />
+					<top parent="gainperiodlabel" anchor="bottom" offset="5" />
+				</anchored>
+			</genericcontrol>
+			<basicdice name="gaindice">
+				<anchored to="gainanchor" width="60" height="20">
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="5" />
+					<left anchor="right" relation="relative" offset="0" />
+				</anchored>
+			</basicdice>
+			<label name="gainlabel_plus">
+				<anchored to="gainanchor" width="10">
+					<top />
+					<left anchor="right" relation="relative" offset="5" />
+				</anchored>
+				<static>+</static>
+			</label>
+			<basicnumber name="gainstatmult">
+				<anchored to="gainanchor" width="20" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="3" />
+				</anchored>
+				<default>1</default>
+				<min>0</min>
+				<hideonvalue>1</hideonvalue>
+				<tooltip textres="power_tooltip_statmult" />
+			</basicnumber>
+			<label name="gainlabel_statmultx">
+				<anchored to="gainanchor" width="10">
+					<top />
+					<left anchor="right" relation="relative" offset="4" />
+				</anchored>
+				<static>x</static>
+				<center />
+			</label>
+			<cycler_power name="gainstat">
+				<script>
+					function onInit()
+						parameters[1].labelsres[1] = parameters[1].labelsres[1]:sub(6);
+						parameters[1].values[1] = parameters[1].values[1]:sub(6);
+						super.onInit()
+					end
+				</script>
+				<anchored to="gainanchor" width="30" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="3" />
+				</anchored>
+			</cycler_power>
+			<label name="gainlabel_plus2">
+				<anchored to="gainanchor" width="10">
+					<top />
+					<left anchor="right" relation="relative" offset="5" />
+				</anchored>
+				<static>+</static>
+			</label>
+			<basicnumber name="gainmodifier">
+				<anchored to="gainanchor" width="35" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="2" />
+				</anchored>
+			</basicnumber>
+
+			<line_column name="divider2" />
+
+			<!-- Loss -->
+			<label name="lossperiodlabel">
+				<anchored to="columnanchor" height="20">
+					<left offset="5" />
+					<top anchor="bottom" relation="relative" offset="5" />
+				</anchored>
+				<static textres="resource_loss_period_label" />
+			</label>
+			<combobox name="lossperiod">
+				<anchored to="lossperiodlabel" position="righthigh" width="100" height="20" offset="10,0" />
+				<listdirection>down</listdirection>
+				<listmaxsize>12</listmaxsize>
+			</combobox>
+			<label name="label_lossall">
+				<anchored to="lossperiod" position="righthigh" offset="15,0" height="20" />
+				<static textres="power_resource_all_label" />
+			</label>
+			<button_checkbox name="lossall">
+				<anchored to="label_lossall" position="righthigh" offset="0,0" width="20" height="20" />
+			</button_checkbox>
+			<genericcontrol name="lossanchor">
+				<anchored width="0" height="0">
+					<left offset="20" />
+					<top parent="lossperiodlabel" anchor="bottom" offset="5" />
+				</anchored>
+			</genericcontrol>
+			<basicdice name="lossdice">
+				<anchored to="lossanchor" width="60" height="20">
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="5" />
+					<left anchor="right" relation="relative" offset="0" />
+				</anchored>
+			</basicdice>
+			<label name="losslabel_plus">
+				<anchored to="lossanchor" width="10">
+					<top />
+					<left anchor="right" relation="relative" offset="5" />
+				</anchored>
+				<static>+</static>
+			</label>
+			<basicnumber name="lossstatmult">
+				<anchored to="lossanchor" width="20" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="3" />
+				</anchored>
+				<default>1</default>
+				<min>0</min>
+				<hideonvalue>1</hideonvalue>
+				<tooltip textres="power_tooltip_statmult" />
+			</basicnumber>
+			<label name="losslabel_statmultx">
+				<anchored to="lossanchor" width="10">
+					<top />
+					<left anchor="right" relation="relative" offset="4" />
+				</anchored>
+				<static>x</static>
+				<center />
+			</label>
+			<cycler_power name="lossstat">
+				<script>
+					function onInit()
+						parameters[1].labelsres[1] = parameters[1].labelsres[1]:sub(6);
+						parameters[1].values[1] = parameters[1].values[1]:sub(6);
+						super.onInit()
+					end
+				</script>
+				<anchored to="lossanchor" width="30" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="3" />
+				</anchored>
+			</cycler_power>
+			<label name="losslabel_plus2">
+				<anchored to="lossanchor" width="10">
+					<top />
+					<left anchor="right" relation="relative" offset="5" />
+				</anchored>
+				<static>+</static>
+			</label>
+			<basicnumber name="lossmodifier">
+				<anchored to="lossanchor" width="35" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="2" />
+				</anchored>
+			</basicnumber>
+
+			<line_column name="divider3" />
+
+			<!-- Sharing -->
+			<label name="gainperiodlabel">
+				<anchored to="columnanchor" height="20">
+					<left offset="5" />
+					<top anchor="bottom" relation="relative" offset="5" />
+				</anchored>
+				<static textres="resource_sharing_label" />
+			</label>
+			<list_text name="sharelist">
+				<anchored>
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="5" />
+					<left />
+					<right />
+				</anchored>
+				<allowdelete />
+				<noscroll />
+				<datasource>.share</datasource>
+				<class>resource_share_entry</class>
+				<sortby mergerule="replace"><control>name</control></sortby>
+				<script>
+					function update()
+						-- local bEdit = (window.parentcontrol.window.cohorts_iedit.getValue() == 1);
+						for _,w in ipairs(getWindows()) do
+							w.idelete.setVisibility(bEdit);
+						end
+					end
+
+					function addEntry(bFocus)
+						local w = createWindow();
+						return w;
+					end
+				</script>
+			</list_text>
+		</sheetdata>
+	</windowclass>
+	<windowclass name="resource_share_entry">
+		<script file="campaign/scripts/resource_share_entry.lua" />
+		<sheetdata>
+			<linkcontrol name="shortcut">
+				<anchored position="insidetopleft" width="20" height="20" />
+				<readonly />
+			</linkcontrol>
+			<stringcontrol name="name">
+				<anchored height="20">
+					<left parent="shortcut" anchor="right" offset="5" />
+					<top />
+					<right />
+				</anchored>
+			</stringcontrol>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="power_resource_editor">
+		<frame>charsheethelper</frame>
+		<placement>
+			<size width="350" height="350" />
+		</placement>
+		<sizelimits>
+			<minimum width="350" height="350" />
+			<dynamic />
+		</sizelimits>
+		<nodelete />
+		<playercontrol />
+		<minimize>minimized_char</minimize>
+		<tooltip control="name" />
+		<sheetdata>
+			<windowtitlebar_char name="title">
+				<resource>power_title_resource</resource>
+			</windowtitlebar_char>
+			<anchor_title_charsheethelper name="contentanchor" />
+			
+			<genericcontrol name="contentframe">
+				<anchored to="contentanchor">
+					<top anchor="bottom" offset="0" />
+					<left />
+					<right />
+					<bottom parent="" offset="-30" />
+				</anchored>
+			</genericcontrol>
+
+			<subwindow_record name="main">
+				<class>power_resource_editor_main</class>
+				<activate />
+				<fastinit />
+			</subwindow_record>
+
+			<scrollbar_record>
+				<target>main</target>
+			</scrollbar_record>
+
+			<resize_charsheethelper />
+			<close_charsheethelper />
+		</sheetdata>
+	</windowclass>
+	<windowclass name="power_resource_editor_main">
+		<script file="campaign/scripts/power_resource_editor.lua" />
+		<sheetdata>
+			<anchor_column name="columnanchor" />
+			
+			<label_column name="name_label">
+				<static textres="power_label_name" />
+			</label_column>
+			<stringcontrol name="name">
+				<anchored>
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="7" />
+					<left offset="97" />
+					<right offset="-5" />
+				</anchored>
+				<multilinespacing>20</multilinespacing>
+				<font>sheettext</font>
+				<readonly />
+			</stringcontrol>
+
+			<header_column name="header_operation_mode">
+				<static textres="power_header_operation_mode" />
+				<center />
+			</header_column>
+			<basicstring name="resource">
+				<anchored width="80" height="20">
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="7" />
+					<left offset="20" />
+				</anchored>
+			</basicstring>
+			<button_stringcycler name="operation">
+				<anchored to="resource" position="righthigh" offset="10,0" width="80" height="20" />
+				<parameters>
+					<defaultlabelres>power_operation_spend</defaultlabelres>
+					<labelsres>power_operation_gain</labelsres>
+					<values>gain</values>
+				</parameters>
+			</button_stringcycler>
+			<label name="label_all">
+				<anchored to="operation" position="righthigh" offset="15,0" height="20" />
+				<static textres="power_resource_all_label" />
+			</label>
+			<button_checkbox name="all">
+				<anchored to="label_all" position="righthigh" offset="0,0" width="20" height="20" />
+			</button_checkbox>
+			
+			<header_column name="header_value">
+				<center />
+			</header_column>
+			<genericcontrol name="valueanchor">
+				<anchored width="0" height="0">
+					<left offset="20" />
+					<top parent="header_value" anchor="bottom" offset="5" />
+				</anchored>
+			</genericcontrol>
+
+			<basicdice name="dice">
+				<anchored to="valueanchor" width="60" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="0" />
+				</anchored>
+			</basicdice>
+			<label name="label_plus">
+				<anchored to="valueanchor" width="10">
+					<top />
+					<left anchor="right" relation="relative" offset="5" />
+				</anchored>
+				<static>+</static>
+			</label>
+			<basicnumber name="statmult">
+				<anchored to="valueanchor" width="20" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="3" />
+				</anchored>
+				<default>1</default>
+				<min>0</min>
+				<hideonvalue>1</hideonvalue>
+				<tooltip textres="power_tooltip_statmult" />
+			</basicnumber>
+			<label name="label_statmultx">
+				<anchored to="valueanchor" width="10">
+					<top />
+					<left anchor="right" relation="relative" offset="4" />
+				</anchored>
+				<static>x</static>
+				<center />
+			</label>
+			<cycler_power name="stat">
+				<anchored to="valueanchor" width="30" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="3" />
+				</anchored>
+			</cycler_power>
+			<label name="label_plus2">
+				<anchored to="valueanchor" width="10">
+					<top />
+					<left anchor="right" relation="relative" offset="5" />
+				</anchored>
+				<static>+</static>
+			</label>
+			
+			<basicnumber name="modifier">
+				<anchored to="valueanchor" width="35" height="20">
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="7" />
+					<left anchor="right" relation="relative" offset="2" />
+				</anchored>
+			</basicnumber>
+			<label name="label_variable">
+				<anchored to="modifier" position="righthigh" offset="15,0" height="20" />
+				<static textres="power_resource_range_label" />
+			</label>
+			<button_checkbox name="variable">
+				<anchored to="label_variable" position="righthigh" offset="0,0" width="20" height="20" />
+			</button_checkbox>
+			
+			<header_column name="header_range">
+				<static textres="power_header_range_value" />
+				<center />
+			</header_column>
+			<genericcontrol name="rangeanchor">
+				<anchored width="0" height="0">
+					<left />
+					<top parent="header_range" anchor="bottom" offset="5" />
+				</anchored>
+			</genericcontrol>
+			<basicnumber name="min">
+				<anchored to="rangeanchor" width="35" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="20" />
+				</anchored>
+				<min>1</min>
+			</basicnumber>
+			<basicnumber name="max">
+				<anchored to="rangeanchor" width="35" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="20" />
+				</anchored>
+				<min>1</min>
+				<hideonvalue>1</hideonvalue>
+			</basicnumber>
+			<basicnumber name="interval">
+				<anchored to="rangeanchor" width="35" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="20" />
+				</anchored>
+				<min>1</min>
+			</basicnumber>
+		</sheetdata>
+	</windowclass>
+</root>
