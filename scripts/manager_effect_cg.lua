@@ -37,7 +37,7 @@ function parseEffectComp(s)
 
 	if rActiveActor then
 		for i = #(rEffectComp.remainder), 1, -1 do
-			local sMultiplier, sResource = rEffectComp.remainder[i]:match("^%[(%d*%.?%d*)CURRENT:([^%]]+)%]$");
+			local sMultiplier, sResource = rEffectComp.remainder[i]:match("^%[(%d*%.?%d*)%s?%*?%s?CURRENT:([^%]]+)%]$");
 			if sResource then
 				local nCurrent = ResourceManager.getCurrentResource(rActiveActor, sResource);
 				if nCurrent then
@@ -45,11 +45,11 @@ function parseEffectComp(s)
 					if sMultiplier and sMultiplier ~= "" then
 						nMultiplier = tonumber(sMultiplier);
 					end
-					rEffectComp.mod = rEffectComp.mod + (nCurrent * nMultiplier);
+					rEffectComp.mod = rEffectComp.mod + math.floor(nCurrent * nMultiplier);
 					table.remove(rEffectComp.remainder, i);
 				end
 			else 
-				sMultiplier, sResource = rEffectComp.remainder[i]:match("^%[(%d*%.?%d*)SPENT:([^%]]+)%]$");
+				sMultiplier, sResource = rEffectComp.remainder[i]:match("^%[(%d*%.?%d*)%s?%*?%s?SPENT:([^%]]+)%]$");
 				if sResource then
 					local nSpent = ResourceManager.getSpentResource(rActiveActor, sResource);
 					if nSpent then
@@ -57,7 +57,7 @@ function parseEffectComp(s)
 						if sMultiplier and sMultiplier ~= "" then
 							nMultiplier = tonumber(sMultiplier);
 						end
-						rEffectComp.mod = rEffectComp.mod + (nSpent + nMultiplier);
+						rEffectComp.mod = rEffectComp.mod + math.floor(nSpent * nMultiplier);
 						table.remove(rEffectComp.remainder, i);
 					end
 				end
@@ -83,41 +83,28 @@ function getEffectsByType(rActor, sEffectType, aFilter, rFilterActor, bTargetedO
 end
 
 function replaceCurrentResource(s)
-	local foundResources = {};
-	for sResource in s:gmatch("CURRENT%(([^%)]+)%)") do
-		foundResources[sResource] = true;
-	end
-	for sResource,_ in pairs(foundResources) do
-		aResourceParts = StringManager.split(sResource, ",", true);
-		if #aResourceParts > 0 then
-			local nCurrent = ResourceManager.getCurrentResource(rActiveActor, sResource);
-			if nCurrent then
-				local nMultiplier = 1;
-				if #aResourceParts == 2 then
-					nMultiplier = tonumber(aResourceParts[2]);
-				end
-				s = s:gsub("CURRENT%(" .. sResource .. "%)", tostring(nCurrent * nMultiplier));
-			end
-		end
-	end
-	return s;
+	return replaceResourceValue(s, "CURRENT", ResourceManager.getCurrentResource);
 end
 
 function replaceSpentResource(s)
+	return replaceResourceValue(s, "SPENT", ResourceManager.getSpentResource);
+end
+
+function replaceResourceValue(s, sValue, fGetValue)
 	local foundResources = {};
-	for sResource in s:gmatch("SPENT%(([^%)]+)%)") do
-		foundResources[sResource] = true;
+	for sResource in s:gmatch(sValue .. "%(([^%)]+)%)") do
+		table.insert(foundResources, sResource);
 	end
-	for sResource,_ in pairs(foundResources) do
-		aResourceParts = StringManager.split(sResource, ",", true);
+	for _,sResource in ipairs(foundResources) do
+		aResourceParts = StringManager.split(sResource, "%*", true);
 		if #aResourceParts > 0 then
-			local nSpent = ResourceManager.getSpentResource(rActiveActor, sResource);
-			if nSpent then
+			local nValue = fGetValue(rActiveActor, StringManager.trim(aResourceParts[1]));
+			if nValue then
 				local nMultiplier = 1;
 				if #aResourceParts == 2 then
 					nMultiplier = tonumber(aResourceParts[2]);
 				end
-				s = s:gsub("SPENT%(" .. sResource .. "%)", tostring(nSpent * nMultiplier));
+				s = s:gsub(sValue .. "%(" .. sResource:gsub("%*", "%%*") .. "%)", tostring(math.floor(nValue * nMultiplier)));
 			end
 		end
 	end
@@ -146,31 +133,9 @@ end
 function processGrant(sEffect, rSourceEffect, sEffectType)
 	local aEffectComps = EffectManager.parseEffect(sEffect);
 	for _,sEffectComp in ipairs(aEffectComps) do
-		local rEffectComp = EffectManager.parseEffectCompSimple(sEffectComp);
+		local rEffectComp = EffectManager5E.parseEffectComp(sEffectComp);
 		if rEffectComp.type == sEffectType then
-			local nCount = #rEffectComp.remainder;
-			local aResources;
-			if nCount == 1 then
-				aResources = {rEffectComp.remainder[1]};
-			elseif nCount ~= 0 then
-				aResources = {};
-				local sComposite;
-				for _,word in ipairs(rEffectComp.remainder) do
-					if word:match("^%{") then
-						sComposite = word:sub(2);
-					elseif word:match("%}$") then
-						sComposite = sComposite .. " " .. word:sub(-1);
-						table.insert(aResources, sComposite);
-						sComposite = nil;
-					elseif not sComposite then
-						table.insert(aResources, word);
-					else
-						sComposite = sComposite .. " " .. word;
-					end
-				end
-			end
-
-			for _,sResource in ipairs(aResources) do
+			for _,sResource in ipairs(rEffectComp.remainder) do
 				local rAction = {};
 				rAction.type = "resource";
 				rAction.operation = "gain";

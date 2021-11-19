@@ -12,6 +12,7 @@ function onInit()
 	ActionsManager.registerResultHandler("resource", onResource);
 
 	GameSystem.actions["resource"] = { sIcon = "coins", sTargeting = "all", bUseModStack = true }
+	table.insert(GameSystem.targetactions, "resource");
 end
 
 function getRoll(rActor, rAction)
@@ -22,6 +23,7 @@ function getRoll(rActor, rAction)
 	rRoll.bAll = rAction.all;
 	rRoll.aDice = rAction.dice or {};
 	rRoll.nMod = rAction.modifier or 0;
+	rRoll.bSelfTarget = true;
 	
 	-- Build description
 	rRoll.sDesc = "[RESOURCE";
@@ -141,6 +143,7 @@ end
 function applyResource(rSource, rTarget, bSecret, nTotal, sOperation, sResource, bAll)
 	if rSource then
 		if sOperation == "loss" then
+			applyResourceLoss(rSource, rTarget, bSecret, nTotal, sResource, bAll)
 		elseif sOperation == "gain" then
 			applyResourceGain(rSource, rTarget, bSecret, nTotal, sResource, bAll)
 		else
@@ -150,6 +153,17 @@ function applyResource(rSource, rTarget, bSecret, nTotal, sOperation, sResource,
 end
 
 function applyResourceSpend(rSource, rTarget, bSecret, nTotal, sResource, bAll)
+	local nOverflow, nRemaining = ResourceManager.adjustResource(rSource, sResource, "", -nTotal, bAll, bOverSpend);
+	if not nOverflow then
+		local msgMissing = {
+			font = "msgfont",
+			icon = "coins",
+			text = string.format(Interface.getString("resource_action_result_missing"), sResource)
+		};
+		ActionsManager.outputResult(bSecret, rSource, nil, msgMissing, msgMissing);
+		return;
+	end
+
 	local msgShort = {
 		font = "msgfont",
 		icon = "coins",
@@ -159,8 +173,6 @@ function applyResourceSpend(rSource, rTarget, bSecret, nTotal, sResource, bAll)
 		font = "msgfont",
 		icon = "coins"
 	};
-
-	local nOverflow, nRemaining = ResourceManager.adjustResource(rSource, sResource, -nTotal, bAll, bOverSpend);
 
 	local bSuccess = false;
 	if not bAll and nOverflow > 0 then
@@ -188,6 +200,17 @@ function applyResourceSpend(rSource, rTarget, bSecret, nTotal, sResource, bAll)
 end
 
 function applyResourceGain(rSource, rTarget, bSecret, nTotal, sResource, bAll)
+	local nOverflow, nRemaining = ResourceManager.adjustResource(rSource, sResource, "gain", nTotal, bAll);
+	if not nOverflow then
+		local msgMissing = {
+			font = "msgfont",
+			icon = "coins",
+			text = string.format(Interface.getString("resource_action_result_missing"), sResource)
+		};
+		ActionsManager.outputResult(bSecret, rSource, nil, msgMissing, msgMissing);
+		return;
+	end
+
 	local msgShort = {
 		font = "msgfont",
 		icon = "coins",
@@ -197,8 +220,6 @@ function applyResourceGain(rSource, rTarget, bSecret, nTotal, sResource, bAll)
 		font = "msgfont",
 		icon = "coins"
 	};
-
-	local nOverflow, nRemaining = ResourceManager.adjustResource(rSource, sResource, nTotal, bAll);
 
 	if bAll and nOverflow < 0 then
 		msgLong.text = string.format(Interface.getString("resource_action_result_no_limit"), sResource, nRemaining);
@@ -216,6 +237,17 @@ function applyResourceGain(rSource, rTarget, bSecret, nTotal, sResource, bAll)
 end
 
 function applyResourceLoss(rSource, rTarget, bSecret, nTotal, sResource, bAll)
+	local nOverflow, nRemaining = ResourceManager.adjustResource(rSource, sResource, "loss" -nTotal, bAll);
+	if not nOverflow then
+		local msgMissing = {
+			font = "msgfont",
+			icon = "coins",
+			text = string.format(Interface.getString("resource_action_result_missing"), sResource)
+		};
+		ActionsManager.outputResult(bSecret, rSource, nil, msgMissing, msgMissing);
+		return;
+	end
+
 	local msgShort = {
 		font = "msgfont",
 		icon = "coins",
@@ -226,8 +258,6 @@ function applyResourceLoss(rSource, rTarget, bSecret, nTotal, sResource, bAll)
 		icon = "coins"
 	};
 	
-	local nOverflow, nRemaining = ResourceManager.adjustResource(rSource, sResource, -nTotal, bAll, true);
-
 	local sLoss;
 	if bAll then
 		sLoss = Interface.getString("resource_action_result_all");
@@ -241,63 +271,81 @@ end
 
 function handleSpendEffects(rSource, rTarget, bSecret, nSpend, sResource)
 	EffectManagerCg.setActiveActor(rSource);
-	for _,nodeEffect in pairs(DB.getChildren(ActorManager.getCTNode(rSource), "effects")) do
-		local sLabel = DB.getValue(nodeEffect, "label");
-		local aEffectComps = EffectManager.parseEffect(sLabel);
-		local nMatch = 0;
-		for kEffectComp,sEffectComp in ipairs(aEffectComps) do
-			local rEffectComp = EffectManager5E.parseEffectComp(sEffectComp);
-			-- Handle conditionals
-			if rEffectComp.type == "IF" then
-				if not EffectManager5E.checkConditional(rSource, nodeEffect, rEffectComp.remainder) then
-					break;
-				end
-			elseif rEffectComp.type == "IFT" then
-				if not rTarget then
-					break;
-				end
-				if not EffectManager5E.checkConditional(rTarget, nodeEffect, rEffectComp.remainder, rSource) then
-					break;
-				end
-				bTargeted = true;
-			elseif StringManager.contains(rEffectComp.remainder, sResource) then
-				if StringManager.contains({"RSRCHEALS", "RSRCHEALT"}, rEffectComp.type) then
-					local rAction = {};
-					rAction.label = sResource;
-					rAction.clauses = {};
-					if rEffectComp.type == "RSRCHEALS" then
-						rAction.sTargeting = "self";
+	local nodeCT = ActorManager.getCTNode(rSource);
+	for _,nodeEffect in pairs(DB.getChildren(nodeCT, "effects")) do
+		-- Check active
+		local nActive = DB.getValue(nodeEffect, "isactive", 0);
+		if (nActive ~= 0) then
+			local sLabel = DB.getValue(nodeEffect, "label");
+			local sApply = DB.getValue(nodeEffect, "apply", "");
+			local aEffectComps = EffectManager.parseEffect(sLabel);
+			local nMatch = 0;
+			for kEffectComp,sEffectComp in ipairs(aEffectComps) do
+				local rEffectComp = EffectManager5E.parseEffectComp(sEffectComp);
+				-- Handle conditionals
+				if rEffectComp.type == "IF" then
+					if not EffectManager5E.checkConditional(rSource, nodeEffect, rEffectComp.remainder) then
+						break;
 					end
-
-					local rClause = {};
-					rClause.dice = rEffectComp.dice;
-					rClause.modifier = rEffectComp.mod;
-					table.insert(rAction.clauses, rClause);
-
-					local rRoll = ActionHeal.getRoll(rSource, rAction);
-					if rRoll then
-						ActionsManager.performMultiAction(nil, rSource, rRoll.sType, {rRoll});
+				elseif rEffectComp.type == "IFT" then
+					if not rTarget then
+						break;
 					end
+					if not EffectManager5E.checkConditional(rTarget, nodeEffect, rEffectComp.remainder, rSource) then
+						break;
+					end
+					bTargeted = true;
+				elseif StringManager.contains(rEffectComp.remainder, sResource) then
+					if StringManager.contains({"RSRCHEALS", "RSRCHEALT"}, rEffectComp.type) then
+						local rAction = {};
+						rAction.label = sResource;
+						rAction.clauses = {};
 
-					nMatch = nMatch + 1;
+						local rClause = {};
+						rClause.dice = rEffectComp.dice;
+						rClause.modifier = rEffectComp.mod;
+						table.insert(rAction.clauses, rClause);
+
+						local aTargets = {};
+						if "RSRCHEALS" == rEffectComp.type then
+							table.insert(aTargets, rSource);
+						elseif rTarget and rTarget ~= rSource then
+							table.insert(aTargets, rTarget);
+						else
+							for _,nodeTarget in pairs(DB.getChildren(nodeCT, "targets")) do
+								local rEffectTarget = ActorManager.resolveActor(DB.getValue(nodeTarget, "noderef"));
+								table.insert(aTargets, rEffectTarget);
+							end
+						end
+						if #aTargets == 0 and bSecret == false then
+							table.insert(aTargets, rSource);
+						end
+
+						local rRoll = ActionHeal.getRoll(rSource, rAction);
+						if rRoll then
+							ActionsManager.actionDirect(rSource, rRoll.sType, {rRoll}, {aTargets});
+						end
+
+						nMatch = nMatch + 1;
+					end
 				end
 			end
-		end
-		
-		-- Remove one shot effects
-		if nMatch > 0 then
-			if nActive == 2 then
-				DB.setValue(v, "isactive", "number", 1);
-			else
-				if sApply == "action" then
-					EffectManager.notifyExpire(v, 0);
-				elseif sApply == "roll" then
-					EffectManager.notifyExpire(v, 0, true);
-				elseif sApply == "single" then
-					EffectManager.notifyExpire(v, nMatch, true);
+
+			-- Remove one shot effects
+			if nMatch > 0 then
+				if nActive == 2 then
+					DB.setValue(v, "isactive", "number", 1);
+				else
+					if sApply == "action" then
+						EffectManager.notifyExpire(v, 0);
+					elseif sApply == "roll" then
+						EffectManager.notifyExpire(v, 0, true);
+					elseif sApply == "single" then
+						EffectManager.notifyExpire(v, nMatch, true);
+					end
 				end
 			end
-		end
-	end
+		end  -- END ACTIVE CHECK
+	end  -- END EFFECT LOOP
 	EffectManagerCg.setActiveActor(nil);
 end

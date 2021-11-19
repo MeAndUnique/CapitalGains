@@ -35,6 +35,7 @@
 	<string name="resource_action_text_gain">Gain %s %s</string>
 	<string name="resource_action_text_insufficient">Insufficient %s: (%d/%d)</string>
 	
+	<string name="resource_action_result_missing">%s -> [NO SUCH RESOURCE]</string>
 	<string name="resource_action_result_all">ALL</string>
 	<string name="resource_action_result_spend_short">%s -> [SPEND]</string>
 	<string name="resource_action_result_spend_long">%s [%s] -> [SPEND][%d REMAINING]</string>

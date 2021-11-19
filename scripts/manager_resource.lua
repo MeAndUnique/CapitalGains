@@ -287,7 +287,7 @@ function clearSpentResources(rActor)
 	aSpentResources[sActor] = {};
 end
 
-function adjustResource(rActor, sResource, nAdjust, bAll, bIsLoss)
+function adjustResource(rActor, sResource, sOperation, nAdjust, bAll)
 	if not rActor then
 		return;
 	end
@@ -299,9 +299,9 @@ function adjustResource(rActor, sResource, nAdjust, bAll, bIsLoss)
 
 	for _,nodeResource in pairs(DB.getChildren(nodeActor, "resources")) do
 		if sResource == DB.getValue(nodeResource, "name") then
-			if bIsLoss then
+			if sOperation == "loss" then
 				return loseResource(nodeResource, nAdjust, bAll);
-			elseif nAdjust > 0 then
+			elseif sOperation == "gain" then
 				return gainResource(sResource, nodeResource, nAdjust, bAll);
 			else
 				return spendResource(rActor, sResource, nodeResource, nAdjust, bAll);
@@ -319,6 +319,7 @@ function gainResource(sResource, nodeResource, nAdjust, bAll)
 	if bAll then
 		if nLimit > 0 then
 			DB.setValue(nodeResource, "current", "number", nLimit);
+			nCurrent = nLimit;
 		end
 		return nLimit - nCurrent, nCurrent;
 	else
