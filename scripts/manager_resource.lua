@@ -17,7 +17,6 @@ function onInit()
 end
 
 function onClose()
-	DB.removeHandler(CombatManager.CT_COMBATANT_PATH, "onDelete", onCombatantDeleted);
 	for _,nodeCombatant in pairs(CombatManager.getCombatantNodes()) do
 		removeResourceHandlers(nodeCombatant);
 	end

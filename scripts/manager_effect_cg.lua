@@ -8,6 +8,7 @@ local evalEffectOriginal;
 local getEffectsByTypeOriginal;
 
 local rActiveActor;
+local bReplace = false;
 
 function onInit()
 	parseEffectCompOriginal = EffectManager5E.parseEffectComp;
@@ -30,47 +31,22 @@ end
 
 function parseEffectComp(s)
 	if rActiveActor then
-		s = replaceCurrentResource(s);
-		s = replaceSpentResource(s);
-	end
-	local rEffectComp = parseEffectCompOriginal(s);
-
-	if rActiveActor then
-		for i = #(rEffectComp.remainder), 1, -1 do
-			local sMultiplier, sResource = rEffectComp.remainder[i]:match("^%[(%d*%.?%d*)%s?%*?%s?CURRENT:([^%]]+)%]$");
-			if sResource then
-				local nCurrent = ResourceManager.getCurrentResource(rActiveActor, sResource);
-				if nCurrent then
-					local nMultiplier = 1;
-					if sMultiplier and sMultiplier ~= "" then
-						nMultiplier = tonumber(sMultiplier);
-					end
-					rEffectComp.mod = rEffectComp.mod + math.floor(nCurrent * nMultiplier);
-					table.remove(rEffectComp.remainder, i);
-				end
-			else 
-				sMultiplier, sResource = rEffectComp.remainder[i]:match("^%[(%d*%.?%d*)%s?%*?%s?SPENT:([^%]]+)%]$");
-				if sResource then
-					local nSpent = ResourceManager.getSpentResource(rActiveActor, sResource);
-					if nSpent then
-						local nMultiplier = 1;
-						if sMultiplier and sMultiplier ~= "" then
-							nMultiplier = tonumber(sMultiplier);
-						end
-						rEffectComp.mod = rEffectComp.mod + math.floor(nSpent * nMultiplier);
-						table.remove(rEffectComp.remainder, i);
-					end
-				end
-			end
+		if bReplace then
+			s = replaceStaticCurrentResource(s);
+			s = replaceStaticSpentResource(s);
+		else
+			s = replaceDynamicCurrentResource(s);
+			s = replaceDynamicSpentResource(s);
 		end
 	end
-
-	return rEffectComp;
+	return parseEffectCompOriginal(s);
 end
 
 function evalEffect(rActor, s)
 	setActiveActor(rActor);
+	bReplace = true;
 	local results = evalEffectOriginal(rActor, s)
+	bReplace = false;
 	setActiveActor(nil);
 	return results;
 end
@@ -82,15 +58,15 @@ function getEffectsByType(rActor, sEffectType, aFilter, rFilterActor, bTargetedO
 	return results;
 end
 
-function replaceCurrentResource(s)
-	return replaceResourceValue(s, "CURRENT", ResourceManager.getCurrentResource);
+function replaceDynamicCurrentResource(s)
+	return replaceDynamicResourceValue(s, "CURRENT", ResourceManager.getCurrentResource);
 end
 
-function replaceSpentResource(s)
-	return replaceResourceValue(s, "SPENT", ResourceManager.getSpentResource);
+function replaceDynamicSpentResource(s)
+	return replaceDynamicResourceValue(s, "SPENT", ResourceManager.getSpentResource);
 end
 
-function replaceResourceValue(s, sValue, fGetValue)
+function replaceDynamicResourceValue(s, sValue, fGetValue)
 	local foundResources = {};
 	for sResource in s:gmatch(sValue .. "%(([^%)]+)%)") do
 		table.insert(foundResources, sResource);
@@ -102,9 +78,40 @@ function replaceResourceValue(s, sValue, fGetValue)
 			if nValue then
 				local nMultiplier = 1;
 				if #aResourceParts == 2 then
-					nMultiplier = tonumber(aResourceParts[2]);
+					nMultiplier = tonumber(aResourceParts[2]) or 1;
 				end
-				s = s:gsub(sValue .. "%(" .. sResource:gsub("%*", "%%*") .. "%)", tostring(math.floor(nValue * nMultiplier)));
+				s = s:gsub(sValue .. "%(" .. sResource:gsub("[%*%-%+]", "%%%1") .. "%)", tostring(math.floor(nValue * nMultiplier)));
+			end
+		end
+	end
+	return s;
+end
+
+function replaceStaticCurrentResource(s)
+	return replaceStaticResourceValue(s, "CURRENT", ResourceManager.getCurrentResource);
+end
+
+function replaceStaticSpentResource(s)
+	return replaceStaticResourceValue(s, "SPENT", ResourceManager.getSpentResource);
+end
+
+function replaceStaticResourceValue(s, sValue, fGetValue)
+	local foundResources = {};
+	for sMatch in s:gmatch("(%[[%+%-]?%d*%.?%d*%s?%*?%s?" .. sValue .. ":[^%]]+%])") do
+		table.insert(foundResources, sMatch);
+	end
+	for _,sMatch in ipairs(foundResources) do
+		local sSign, sMultiplier, sResource = sMatch:match("^%[([%+%-]?)(%d*%.?%d*)%s?%*?%s?" .. sValue .. ":([^%]]+)%]$");
+		Debug.chat(sSign, sMultiplier, sResource);
+		if sResource then
+			local nValue = fGetValue(rActiveActor, StringManager.trim(sResource));
+			if nValue then
+				local nMultiplier = tonumber(sMultiplier) or 1;
+				if sSign == "-" then
+					nMultiplier = -nMultiplier;
+				end
+				Debug.chat(nValue, nMultiplier);
+				s = s:gsub(sMatch:gsub("[%[%]%*%-%+]", "%%%1"), tostring(math.floor(nValue * nMultiplier)));
 			end
 		end
 	end
