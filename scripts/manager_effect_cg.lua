@@ -102,7 +102,6 @@ function replaceStaticResourceValue(s, sValue, fGetValue)
 	end
 	for _,sMatch in ipairs(foundResources) do
 		local sSign, sMultiplier, sResource = sMatch:match("^%[([%+%-]?)(%d*%.?%d*)%s?%*?%s?" .. sValue .. ":([^%]]+)%]$");
-		Debug.chat(sSign, sMultiplier, sResource);
 		if sResource then
 			local nValue = fGetValue(rActiveActor, StringManager.trim(sResource));
 			if nValue then
@@ -110,7 +109,6 @@ function replaceStaticResourceValue(s, sValue, fGetValue)
 				if sSign == "-" then
 					nMultiplier = -nMultiplier;
 				end
-				Debug.chat(nValue, nMultiplier);
 				s = s:gsub(sMatch:gsub("[%[%]%*%-%+]", "%%%1"), tostring(math.floor(nValue * nMultiplier)));
 			end
 		end
