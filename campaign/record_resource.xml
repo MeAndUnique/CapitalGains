@@ -92,6 +92,16 @@
 		<minimize>minimized_reference</minimize>
 		<tooltip field="name" />
 		<nodelete />
+		<script>
+			function onLockChanged()
+				if header.subwindow then
+					header.subwindow.update();
+				end
+				if main.subwindow then
+					main.subwindow.update();
+				end
+			end
+		</script>
 		<sheetdata>
 			<hs name="type" />
 
@@ -558,6 +568,7 @@
 					<top />
 					<left anchor="right" relation="relative" offset="20" />
 				</anchored>
+				<defaultvalue>1</defaultvalue>
 				<min>1</min>
 			</basicnumber>
 			<basicnumber name="max">
@@ -573,6 +584,7 @@
 					<top />
 					<left anchor="right" relation="relative" offset="20" />
 				</anchored>
+				<defaultvalue>1</defaultvalue>
 				<min>1</min>
 			</basicnumber>
 		</sheetdata>

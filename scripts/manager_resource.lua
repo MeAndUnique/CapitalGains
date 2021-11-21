@@ -13,54 +13,19 @@ function onInit()
 		for _,nodeCombatant in pairs(CombatManager.getCombatantNodes()) do
 			addResourceHandlers(nodeCombatant);
 		end
-
-		addPCOriginal = CombatManager.addPC;
-		CombatManager.addPC = addPC;
-		addNPCOriginal = CombatManager.addNPC;
-		CombatManager.addNPC = addNPC;
-		DB.addHandler(CombatManager.CT_COMBATANT_PATH, "onDelete", onCombatantDeleted);
 	end
 end
 
 function onClose()
-	DB.removeHandler(CombatManager.CT_COMBATANT_PATH, "onDelete", onCombatantDeleted);
 	for _,nodeCombatant in pairs(CombatManager.getCombatantNodes()) do
 		removeResourceHandlers(nodeCombatant);
 	end
-end
-
-function addPC(nodePC)
-	local nodeEntry = addPCOriginal(nodePC);
-	addResourceHandlers(nodeEntry);
-	return nodeEntry;
-end
-
-function addNPC(nodeNPC)
-	local nodeEntry = addNPCOriginal(nodeNPC);
-	addResourceHandlers(nodeEntry);
-	return nodeEntry;
-end
-
-function onCombatantDeleted(nodeCombatant)
-	removeResourceHandlers(nodeCombatant.getPath());
 end
 
 function addResourceHandlers(nodeActor)
 	local sActorPath = ActorManager.getCreatureNodeName(nodeActor);
 	DB.addHandler(sActorPath .. ".resources.*.current", "onUpdate", synchronizeResourceField);
 	DB.addHandler(sActorPath .. ".resources.*.limit", "onUpdate", synchronizeResourceField);
-	DB.addHandler(sActorPath .. ".resources.*.gainperiod", "onUpdate", synchronizeResourceField);
-	DB.addHandler(sActorPath .. ".resources.*.gainall", "onUpdate", synchronizeResourceField);
-	DB.addHandler(sActorPath .. ".resources.*.gaindice", "onUpdate", synchronizeResourceField);
-	DB.addHandler(sActorPath .. ".resources.*.gainstat", "onUpdate", synchronizeResourceField);
-	DB.addHandler(sActorPath .. ".resources.*.gainstatmult", "onUpdate", synchronizeResourceField);
-	DB.addHandler(sActorPath .. ".resources.*.gainmodifier", "onUpdate", synchronizeResourceField);
-	DB.addHandler(sActorPath .. ".resources.*.lossperiod", "onUpdate", synchronizeResourceField);
-	DB.addHandler(sActorPath .. ".resources.*.lossall", "onUpdate", synchronizeResourceField);
-	DB.addHandler(sActorPath .. ".resources.*.lossdice", "onUpdate", synchronizeResourceField);
-	DB.addHandler(sActorPath .. ".resources.*.lossstat", "onUpdate", synchronizeResourceField);
-	DB.addHandler(sActorPath .. ".resources.*.lossstatmult", "onUpdate", synchronizeResourceField);
-	DB.addHandler(sActorPath .. ".resources.*.lossmodifier", "onUpdate", synchronizeResourceField);
 
 	DB.addHandler(sActorPath .. ".resources.*.share.*.record", "onUpdate", onUpdateSharedResource);
 	DB.addHandler(sActorPath .. ".resources.*.share.*.record", "onDelete", onDeleteSharedResource);
@@ -70,18 +35,6 @@ function removeResourceHandlers(nodeActor)
 	local sActorPath = ActorManager.getCreatureNodeName(nodeActor);
 	DB.removeHandler(sActorPath .. ".resources.*.current", "onUpdate", synchronizeResourceField);
 	DB.removeHandler(sActorPath .. ".resources.*.limit", "onUpdate", synchronizeResourceField);
-	DB.removeHandler(sActorPath .. ".resources.*.gainperiod", "onUpdate", synchronizeResourceField);
-	DB.removeHandler(sActorPath .. ".resources.*.gainall", "onUpdate", synchronizeResourceField);
-	DB.removeHandler(sActorPath .. ".resources.*.gaindice", "onUpdate", synchronizeResourceField);
-	DB.removeHandler(sActorPath .. ".resources.*.gainstat", "onUpdate", synchronizeResourceField);
-	DB.removeHandler(sActorPath .. ".resources.*.gainstatmult", "onUpdate", synchronizeResourceField);
-	DB.removeHandler(sActorPath .. ".resources.*.gainmodifier", "onUpdate", synchronizeResourceField);
-	DB.removeHandler(sActorPath .. ".resources.*.lossperiod", "onUpdate", synchronizeResourceField);
-	DB.removeHandler(sActorPath .. ".resources.*.lossall", "onUpdate", synchronizeResourceField);
-	DB.removeHandler(sActorPath .. ".resources.*.lossdice", "onUpdate", synchronizeResourceField);
-	DB.removeHandler(sActorPath .. ".resources.*.lossstat", "onUpdate", synchronizeResourceField);
-	DB.removeHandler(sActorPath .. ".resources.*.lossstatmult", "onUpdate", synchronizeResourceField);
-	DB.removeHandler(sActorPath .. ".resources.*.lossmodifier", "onUpdate", synchronizeResourceField);
 	
 	DB.removeHandler(sActorPath .. ".resources.*.share.*.record", "onUpdate", onUpdateSharedResource);
 	DB.removeHandler(sActorPath .. ".resources.*.share.*.record", "onDelete", onDeleteSharedResource);
@@ -199,10 +152,13 @@ function calculateResourcePeriod(rActor, sPeriod)
 				rAction.operation = "gain";
 				rAction.label = "Resource Gain";
 				rAction.resource = DB.getValue(nodeResource, "name", "");
-				rAction.modifier = DB.getValue(nodeResource, "gainmodifier", 0);
-				rAction.stat = DB.getValue(nodeResource, "gainstat", "");
-				rAction.statmult = DB.getValue(nodeResource, "gainstatmult", 0);
-				rAction.dice = DB.getValue(nodeResource, "gaindice", {});
+				rAction.all = DB.getValue(nodeResource, "gainall", 0) == 1;
+				if not rAction.all then
+					rAction.modifier = DB.getValue(nodeResource, "gainmodifier", 0);
+					rAction.stat = DB.getValue(nodeResource, "gainstat", "");
+					rAction.statmult = DB.getValue(nodeResource, "gainstatmult", 0);
+					rAction.dice = DB.getValue(nodeResource, "gaindice", {});
+				end
 
 				PowerManager.evalAction(rActor, nil, rAction);
 				rRoll = ActionResource.getRoll(rActor, rAction);
@@ -216,10 +172,13 @@ function calculateResourcePeriod(rActor, sPeriod)
 				rAction.operation = "loss";
 				rAction.label = "Resource Loss";
 				rAction.resource = DB.getValue(nodeResource, "name", "");
-				rAction.modifier = DB.getValue(nodeResource, "lossmodifier", 0);
-				rAction.stat = DB.getValue(nodeResource, "lossstat", "");
-				rAction.statmult = DB.getValue(nodeResource, "lossstatmult", 0);
-				rAction.dice = DB.getValue(nodeResource, "lossdice", {});
+				rAction.all = DB.getValue(nodeResource, "lossall", 0) == 1;
+				if not rAction.all then
+					rAction.modifier = DB.getValue(nodeResource, "lossmodifier", 0);
+					rAction.stat = DB.getValue(nodeResource, "lossstat", "");
+					rAction.statmult = DB.getValue(nodeResource, "lossstatmult", 0);
+					rAction.dice = DB.getValue(nodeResource, "lossdice", {});
+				end
 
 				PowerManager.evalAction(rActor, nil, rAction);
 				rRoll = ActionResource.getRoll(rActor, rAction);
@@ -334,7 +293,7 @@ function gainResource(sResource, nodeResource, nAdjust, bAll)
 	end
 end
 
-function spendResource(rActor, sResource, nodeResource, nAdjust, bAll, bIsLoss)
+function spendResource(rActor, sResource, nodeResource, nAdjust, bAll)
 	local nCurrent = DB.getValue(nodeResource, "current", 0);
 	if bAll then
 		setSpentResource(rActor, sResource, nCurrent);
