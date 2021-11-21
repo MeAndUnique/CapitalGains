@@ -13,6 +13,7 @@ function onInit()
 	lossperiod.onValueChanged = refreshLossValues;
 
 	onLimitChanged();
+	update();
 end
 
 function addPeriodOptions(control)
@@ -66,13 +67,53 @@ function onDrop(x, y, draginfo)
 	end
 end
 
-function onLockChanged()
-	if header.subwindow then
-		header.subwindow.update();
-	end
+function update()
 	local bReadOnly = WindowManager.getReadOnlyState(getDatabaseNode());
 	limit.setReadOnly(bReadOnly);
+
 	gainperiod.setComboBoxReadOnly(bReadOnly);
+	gainall.setReadOnly(bReadOnly);
+	gaindice.setReadOnly(bReadOnly);
+	gainstat.setReadOnly(bReadOnly);
+	gainstatmult.setReadOnly(bReadOnly);
+	gainmodifier.setReadOnly(bReadOnly);
+
+	lossperiod.setComboBoxReadOnly(bReadOnly);
+	lossall.setReadOnly(bReadOnly);
+	lossdice.setReadOnly(bReadOnly);
+	lossstat.setReadOnly(bReadOnly);
+	lossstatmult.setReadOnly(bReadOnly);
+	lossmodifier.setReadOnly(bReadOnly);
+	
+	if bReadOnly then
+		limit.setFrame(nil);
+		
+		gainperiod.setFrame(nil);
+		gaindice.setFrame(nil);
+		gainstat.setFrame(nil);
+		gainstatmult.setFrame(nil);
+		gainmodifier.setFrame(nil);
+		
+		lossperiod.setFrame(nil);
+		lossdice.setFrame(nil);
+		lossstat.setFrame(nil);
+		lossstatmult.setFrame(nil);
+		lossmodifier.setFrame(nil);
+	else
+		limit.setFrame("fielddark", 7, 5, 7, 5);
+		
+		gainperiod.setFrame("fieldlight", 7, 5, 7, 5);
+		gaindice.onValueChanged(); -- basicdice sets the frame when the value changes.
+		gainstat.setFrame("fielddark", 7, 5, 7, 5);
+		gainstatmult.setFrame("fielddark", 7, 5, 7, 5);
+		gainmodifier.setFrame("fielddark", 7, 5, 7, 5);
+		
+		lossperiod.setFrame("fieldlight", 7, 5, 7, 5);
+		lossdice.onValueChanged(); -- basicdice sets the frame when the value changes.
+		lossstat.setFrame("fielddark", 7, 5, 7, 5);
+		lossstatmult.setFrame("fielddark", 7, 5, 7, 5);
+		lossmodifier.setFrame("fielddark", 7, 5, 7, 5);
+	end
 end
 
 function onLimitChanged()
