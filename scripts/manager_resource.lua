@@ -152,10 +152,13 @@ function calculateResourcePeriod(rActor, sPeriod)
 				rAction.operation = "gain";
 				rAction.label = "Resource Gain";
 				rAction.resource = DB.getValue(nodeResource, "name", "");
-				rAction.modifier = DB.getValue(nodeResource, "gainmodifier", 0);
-				rAction.stat = DB.getValue(nodeResource, "gainstat", "");
-				rAction.statmult = DB.getValue(nodeResource, "gainstatmult", 0);
-				rAction.dice = DB.getValue(nodeResource, "gaindice", {});
+				rAction.all = DB.getValue(nodeResource, "gainall", 0) == 1;
+				if not rAction.all then
+					rAction.modifier = DB.getValue(nodeResource, "gainmodifier", 0);
+					rAction.stat = DB.getValue(nodeResource, "gainstat", "");
+					rAction.statmult = DB.getValue(nodeResource, "gainstatmult", 0);
+					rAction.dice = DB.getValue(nodeResource, "gaindice", {});
+				end
 
 				PowerManager.evalAction(rActor, nil, rAction);
 				rRoll = ActionResource.getRoll(rActor, rAction);
@@ -169,10 +172,13 @@ function calculateResourcePeriod(rActor, sPeriod)
 				rAction.operation = "loss";
 				rAction.label = "Resource Loss";
 				rAction.resource = DB.getValue(nodeResource, "name", "");
-				rAction.modifier = DB.getValue(nodeResource, "lossmodifier", 0);
-				rAction.stat = DB.getValue(nodeResource, "lossstat", "");
-				rAction.statmult = DB.getValue(nodeResource, "lossstatmult", 0);
-				rAction.dice = DB.getValue(nodeResource, "lossdice", {});
+				rAction.all = DB.getValue(nodeResource, "lossall", 0) == 1;
+				if not rAction.all then
+					rAction.modifier = DB.getValue(nodeResource, "lossmodifier", 0);
+					rAction.stat = DB.getValue(nodeResource, "lossstat", "");
+					rAction.statmult = DB.getValue(nodeResource, "lossstatmult", 0);
+					rAction.dice = DB.getValue(nodeResource, "lossdice", {});
+				end
 
 				PowerManager.evalAction(rActor, nil, rAction);
 				rRoll = ActionResource.getRoll(rActor, rAction);
