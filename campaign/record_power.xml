@@ -11,14 +11,14 @@
 					super.onInit();
 				end
 				if not windowlist.isReadOnly() then
-					registerMenuItem(Interface.getString("power_menu_addresource"), "coins", 3, 1);
+					registerMenuItem(Interface.getString("power_menu_addresource"), "coins", 3, 6);
 				end
 			end
 			function onMenuSelection(selection, subselection)
 				if super and super.onMenuSelection then
 					super.onMenuSelection(selection, subselection);
 				end
-				if selection == 3 and subselection == 1 then
+				if selection == 3 and subselection == 6 then
 					createAction("resource");
 					activatedetail.setValue(1);
 				end
