@@ -57,7 +57,7 @@
 								local nInternval = DB.getValue(node, "interval", 0);
 								nModifier = nModifier + (notches * nInternval);
 								nModifier = math.max(nMin, nModifier);
-								if nMax > 0 then
+								if nMax > nMin then
 									nModifier = math.min(nMax, nModifier);
 								end
 								DB.setValue(node, "modifier", "number", nModifier);

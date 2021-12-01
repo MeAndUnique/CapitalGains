@@ -576,8 +576,8 @@
 					<top />
 					<left anchor="right" relation="relative" offset="20" />
 				</anchored>
-				<min>1</min>
-				<hideonvalue>1</hideonvalue>
+				<min>0</min>
+				<hideonvalue>0</hideonvalue>
 			</basicnumber>
 			<basicnumber name="interval">
 				<anchored to="rangeanchor" width="35" height="20">
