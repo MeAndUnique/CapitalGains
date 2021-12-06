@@ -68,19 +68,19 @@ end
 
 function replaceDynamicResourceValue(s, sValue, fGetValue)
 	local foundResources = {};
-	for sResource in s:gmatch(sValue .. "%(([^%)]+)%)") do
-		table.insert(foundResources, sResource);
+	for sMatch in s:gmatch(sValue .. "%(([^%)]+)%)") do
+		table.insert(foundResources, sMatch);
 	end
-	for _,sResource in ipairs(foundResources) do
-		aResourceParts = StringManager.split(sResource, "%*", true);
-		if #aResourceParts > 0 then
-			local nValue = fGetValue(rActiveActor, StringManager.trim(aResourceParts[1]));
+	for _,sMatch in ipairs(foundResources) do
+		local sSign, sMultiplier, sResource = sMatch:match("^([%+%-]?)(%d*%.?%d*)%s?%*?(.+)$");
+		if sResource then
+			local nValue = fGetValue(rActiveActor, StringManager.trim(sResource));
 			if nValue then
-				local nMultiplier = 1;
-				if #aResourceParts == 2 then
-					nMultiplier = tonumber(aResourceParts[2]) or 1;
+				local nMultiplier = tonumber(sMultiplier) or 1;
+				if sSign == "-" then
+					nMultiplier = -nMultiplier;
 				end
-				s = s:gsub(sValue .. "%(" .. sResource:gsub("[%*%-%+]", "%%%1") .. "%)", tostring(math.floor(nValue * nMultiplier)));
+				s = s:gsub(sValue .. "%(" .. sMatch:gsub("[%*%-%+]", "%%%1") .. "%)", tostring(math.floor(nValue * nMultiplier)));
 			end
 		end
 	end
