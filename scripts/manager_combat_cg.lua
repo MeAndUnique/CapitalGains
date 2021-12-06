@@ -32,9 +32,8 @@ function resetHealth(nodeCT, bLong)
 end
 
 function addPC(nodePC)
-	local nodeEntry = addPCOriginal(nodePC);
-	ResourceManager.addResourceHandlers(nodeEntry);
-	return nodeEntry;
+	ResourceManager.addResourceHandlers(nodePC);
+	addPCOriginal(nodePC);
 end
 
 function addNPC(sClass, nodeNPC, sName)
