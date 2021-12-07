@@ -42,6 +42,23 @@
 				</anchored>
 				<icons>char_treasure</icons>
 				<static textres="power_header_resources" />
+				<script>
+					function onClickDown()
+						return true;
+					end
+					
+					function onClickRelease()
+						local bVisible = window.list.isVisible();
+						if bVisible then
+							setFont("subwindowsmalltitle_disabled");
+							window.list.setVisible(false);
+						else
+							setFont("subwindowsmalltitle");
+							window.list.setVisible(true);
+						end
+						return true;
+					end
+				</script>
 			</label_charframetop>
 			<button_iadd name="iadd">
 				<anchored position="insidetopright" offset="5,10" />

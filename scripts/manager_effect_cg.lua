@@ -31,13 +31,8 @@ end
 
 function parseEffectComp(s)
 	if rActiveActor then
-		if bReplace then
-			s = replaceStaticCurrentResource(s);
-			s = replaceStaticSpentResource(s);
-		else
-			s = replaceDynamicCurrentResource(s);
-			s = replaceDynamicSpentResource(s);
-		end
+		s = replaceResourceValue(s, "CURRENT", bReplace, ResourceManager.getCurrentResource);
+		s = replaceResourceValue(s, "SPENT", bReplace, ResourceManager.getSpentResource);
 	end
 	return parseEffectCompOriginal(s);
 end
@@ -58,50 +53,21 @@ function getEffectsByType(rActor, sEffectType, aFilter, rFilterActor, bTargetedO
 	return results;
 end
 
-function replaceDynamicCurrentResource(s)
-	return replaceDynamicResourceValue(s, "CURRENT", ResourceManager.getCurrentResource);
-end
-
-function replaceDynamicSpentResource(s)
-	return replaceDynamicResourceValue(s, "SPENT", ResourceManager.getSpentResource);
-end
-
-function replaceDynamicResourceValue(s, sValue, fGetValue)
+function replaceResourceValue(s, sValue, bStatic, fGetValue)
 	local foundResources = {};
-	for sResource in s:gmatch(sValue .. "%(([^%)]+)%)") do
-		table.insert(foundResources, sResource);
-	end
-	for _,sResource in ipairs(foundResources) do
-		aResourceParts = StringManager.split(sResource, "%*", true);
-		if #aResourceParts > 0 then
-			local nValue = fGetValue(rActiveActor, StringManager.trim(aResourceParts[1]));
-			if nValue then
-				local nMultiplier = 1;
-				if #aResourceParts == 2 then
-					nMultiplier = tonumber(aResourceParts[2]) or 1;
-				end
-				s = s:gsub(sValue .. "%(" .. sResource:gsub("[%*%-%+]", "%%%1") .. "%)", tostring(math.floor(nValue * nMultiplier)));
-			end
-		end
-	end
-	return s;
-end
-
-function replaceStaticCurrentResource(s)
-	return replaceStaticResourceValue(s, "CURRENT", ResourceManager.getCurrentResource);
-end
-
-function replaceStaticSpentResource(s)
-	return replaceStaticResourceValue(s, "SPENT", ResourceManager.getSpentResource);
-end
-
-function replaceStaticResourceValue(s, sValue, fGetValue)
-	local foundResources = {};
-	for sMatch in s:gmatch("(%[[%+%-]?%d*%.?%d*%s?%*?%s?" .. sValue .. ":[^%]]+%])") do
+	for sMatch in s:gmatch("(%[?" .. sValue .. "%([%+%-]?%d*%.?%d*%s?%*?%s?[^%]]+%)%]?)") do
 		table.insert(foundResources, sMatch);
 	end
+
+	local sPrefix = "";
+	local sPostfix = "";
+	if bStatic then
+		sPrefix = "%[";
+		sPostfix = "%]";
+	end
+
 	for _,sMatch in ipairs(foundResources) do
-		local sSign, sMultiplier, sResource = sMatch:match("^%[([%+%-]?)(%d*%.?%d*)%s?%*?%s?" .. sValue .. ":([^%]]+)%]$");
+		local sSign, sMultiplier, sResource = sMatch:match("^" .. sPrefix .. sValue .. "%(([%+%-]?)(%d*%.?%d*)%s?%*?%s?([^%]]+)%)" .. sPostfix .. "$");
 		if sResource then
 			local nValue = fGetValue(rActiveActor, StringManager.trim(sResource));
 			if nValue then
@@ -109,7 +75,7 @@ function replaceStaticResourceValue(s, sValue, fGetValue)
 				if sSign == "-" then
 					nMultiplier = -nMultiplier;
 				end
-				s = s:gsub(sMatch:gsub("[%[%]%*%-%+]", "%%%1"), tostring(math.floor(nValue * nMultiplier)));
+				s = s:gsub(sMatch:gsub("[%[%]%(%)%*%-%+]", "%%%1"), tostring(math.floor(nValue * nMultiplier)));
 			end
 		end
 	end

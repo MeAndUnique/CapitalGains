@@ -237,7 +237,6 @@ function applyResourceGain(rSource, rTarget, bSecret, nTotal, sResource, bAll)
 end
 
 function applyResourceLoss(rSource, rTarget, bSecret, nTotal, sResource, bAll)
-	Debug.chat(rSource, rTarget, bSecret, nTotal, sResource, bAll)
 	local nOverflow, nRemaining = ResourceManager.adjustResource(rSource, sResource, "loss", -nTotal, bAll);
 	if not nOverflow then
 		local msgMissing = {
