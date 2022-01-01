@@ -16,9 +16,13 @@ function onInit()
 		CombatManager.setCustomTurnStart(onTurnStart);
 		CombatManager.setCustomTurnEnd(onTurnEnd);
 
-		for _,nodeCombatant in pairs(CombatManager.getCombatantNodes()) do
-			addResourceHandlers(nodeCombatant);
-		end
+		Interface.onDesktopInit = onDesktopInit;
+	end
+end
+
+function onDesktopInit()
+	for _,nodeCombatant in pairs(CombatManager.getCombatantNodes()) do
+		addResourceHandlers(nodeCombatant);
 	end
 end
 
