@@ -26,6 +26,7 @@ function addPeriodOptions(control)
 
 	if PowerManagerKw then
 		control.add("Extended Rest");
+		control.add("Intrigue");
 	end
 
 	if (control.getValue() or "") == "" then
