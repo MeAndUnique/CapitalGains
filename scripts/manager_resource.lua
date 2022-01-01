@@ -5,14 +5,24 @@
 
 local aSpentResources = {};
 
+tRestPriority = {
+	["Short Rest"] = 1,
+	["Long Rest"] = 2,
+	["Extended Rest"] = 3,
+};
+
 function onInit()
 	if Session.IsHost then
 		CombatManager.setCustomTurnStart(onTurnStart);
 		CombatManager.setCustomTurnEnd(onTurnEnd);
 
-		for _,nodeCombatant in pairs(CombatManager.getCombatantNodes()) do
-			addResourceHandlers(nodeCombatant);
-		end
+		Interface.onDesktopInit = onDesktopInit;
+	end
+end
+
+function onDesktopInit()
+	for _,nodeCombatant in pairs(CombatManager.getCombatantNodes()) do
+		addResourceHandlers(nodeCombatant);
 	end
 end
 
@@ -146,7 +156,7 @@ function calculateResourcePeriod(rActor, sPeriod)
 	local nodeActor = ActorManager.getCreatureNode(rActor);
 	if nodeActor then
 		for _,nodeResource in pairs(DB.getChildren(nodeActor, "resources")) do
-			if DB.getValue(nodeResource, "gainperiod", "") == sPeriod then
+			if matchPeriod(sPeriod, DB.getValue(nodeResource, "gainperiod", "")) then
 				local rAction = {};
 				rAction.type = "resource";
 				rAction.operation = "gain";
@@ -166,7 +176,7 @@ function calculateResourcePeriod(rActor, sPeriod)
 					ActionsManager.performMultiAction(nil, rActor, rRoll.sType, {rRoll});
 				end
 			end
-			if DB.getValue(nodeResource, "lossperiod", "") == sPeriod then
+			if matchPeriod(sPeriod, DB.getValue(nodeResource, "lossperiod", "")) then
 				local rAction = {};
 				rAction.type = "resource";
 				rAction.operation = "loss";
@@ -188,6 +198,20 @@ function calculateResourcePeriod(rActor, sPeriod)
 			end
 		end
 	end
+end
+
+function matchPeriod(sCurrent, sExpected)
+	if sExpected == sCurrent then
+		return true;
+	end
+
+	local nCurrentPriority = tRestPriority[sCurrent];
+	local nExpectedPriority = tRestPriority[sExpected];
+	if nCurrentPriority and nExpectedPriority then
+		return nCurrentPriority > nExpectedPriority;
+	end
+
+	return false;
 end
 
 function getCurrentResource(rActor, sResource)

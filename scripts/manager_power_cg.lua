@@ -6,6 +6,7 @@
 local getPCPowerActionOriginal;
 local evalActionOriginal;
 local performActionOriginal;
+local resetIntriguePowersOriginal;
 
 function onInit()
 	getPCPowerActionOriginal = PowerManager.getPCPowerAction;
@@ -16,6 +17,11 @@ function onInit()
 	
 	performActionOriginal = PowerManager.performAction;
 	PowerManager.performAction = performAction;
+
+	if PowerManagerKw then
+		resetIntriguePowersOriginal = PowerManagerKw.resetIntriguePowers;
+		PowerManagerKw.resetIntriguePowers = resetIntriguePowers;
+	end
 end
 
 function getPCPowerAction(nodeAction, sSubRoll)
@@ -122,4 +128,9 @@ function performAction(draginfo, rActor, rAction, nodePower)
 	else
 		return performActionOriginal(draginfo, rActor, rAction, nodePower);
 	end
+end
+
+function resetIntriguePowers(nodeCaster)
+	resetIntriguePowersOriginal(nodeCaster);
+	ResourceManager.calculateResourcePeriod(ActionsManager.resolveActor(nodeCaster), "Intrigue");
 end

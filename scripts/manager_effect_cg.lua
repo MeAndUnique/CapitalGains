@@ -82,21 +82,27 @@ function replaceResourceValue(s, sValue, bStatic, fGetValue)
 	return s;
 end
 
-function processEffectTurnStart(sourceNodeCT, nodeCT, nodeEffect)
-	local sSourceName = sourceNodeCT.getNodeName();
-	local rSource = ActorManager.resolveActor(sourceNodeCT);
-	local sEffect = DB.getValue(nodeEffect, "label", "");
-	local sEffectSource = DB.getValue(nodeEffect, "source_name", "");
-	local rSourceEffect = ActorManager.resolveActor(sEffectSource);
-	if rSourceEffect == nil then
-		rSourceEffect = rSource;
-	end
-	if sourceNodeCT == nodeCT then
-		if EffectsManagerBCE.processEffect(rSource,nodeEffect,"GRANTS") then
-			processGrant(sEffect, rSourceEffect, "GRANTS");
+function processEffectTurnStart(rSource)
+	local aTags = {"GRANTS"}
+	local tMatch = EffectsManagerBCE.getEffects(rSource, aTags, rSource)
+	for _,rEffect in pairs(tMatch) do
+		if (rEffect.sTag == "GRANTS") and (rEffect.sSource ~= "") then
+			local rSourceEffect = ActorManager.resolveActor(tEffect.sSource)
+			processGrant(rEffect.sLabel, rSourceEffect, "GRANTS");
 		end
-	elseif sSourceName == sEffectSource and EffectsManagerBCE.processEffect(rSource,nodeEffect,"SGRANTS") then
-		processGrant(sEffect, rSourceEffect, "SGRANTS");
+	end
+	
+	aTags = {"SGRANTS"}
+	for _, nodeCT in pairs(CombatManager.getCombatantNodes()) do
+		local rActor = ActorManager.resolveActor(nodeCT)
+		if rActor ~= rSource then
+			tMatch = EffectsManagerBCE.getEffects(rActor, aTags, rSource)
+			for _,tEffect in pairs(tMatch) do
+				if tEffect.sTag == "SGRANTS" then
+					processGrant(rEffect.sLabel, rSource, "SGRANTS");
+				end
+			end
+		end
 	end
 	return true;
 end
