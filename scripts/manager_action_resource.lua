@@ -309,7 +309,7 @@ function handleSpendEffects(rSource, rTarget, bSecret, nSpend, sResource)
 						local aTargets = {};
 						if "RSRCHEALS" == rEffectComp.type then
 							table.insert(aTargets, rSource);
-						elseif rTarget and rTarget ~= rSource then
+						elseif rTarget and rTarget.sCTNode ~= rSource.sCTNode then
 							table.insert(aTargets, rTarget);
 						else
 							for _,nodeTarget in pairs(DB.getChildren(nodeCT, "targets")) do
