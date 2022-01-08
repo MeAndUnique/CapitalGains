@@ -27,7 +27,7 @@ end
 function getPCPowerAction(nodeAction, sSubRoll)
 	local rAction, rActor = getPCPowerActionOriginal(nodeAction, sSubRoll);
 
-	if rAction.type == "resource" then
+	if rAction and rAction.type == "resource" then
 		rAction.resource  = DB.getValue(nodeAction, "resource", "");
 		rAction.operation = DB.getValue(nodeAction, "operation", "");
 		rAction.all = DB.getValue(nodeAction, "all", 0) == 1;
