@@ -21,6 +21,8 @@ function onInit()
 	EffectManager5E.getEffectsByType = getEffectsByType;
 
 	if EffectsManagerBCE then
+		EffectsManagerBCE.registerBCETag("GRANTS", EffectsManagerBCE.aBCESourceMattersOptions);
+		EffectsManagerBCE.registerBCETag("SGRANTS", EffectsManagerBCE.aBCESourceMattersOptions);
 		EffectsManagerBCE.setCustomProcessTurnStart(processEffectTurnStart);
 	end
 end
@@ -83,22 +85,22 @@ function replaceResourceValue(s, sValue, bStatic, fGetValue)
 end
 
 function processEffectTurnStart(rSource)
-	local aTags = {"GRANTS"}
-	local tMatch = EffectsManagerBCE.getEffects(rSource, aTags, rSource)
+	local aTags = {"GRANTS"};
+	local tMatch = EffectsManagerBCE.getEffects(rSource, aTags, rSource);
 	for _,rEffect in pairs(tMatch) do
 		if (rEffect.sTag == "GRANTS") and (rEffect.sSource ~= "") then
-			local rSourceEffect = ActorManager.resolveActor(tEffect.sSource)
+			local rSourceEffect = ActorManager.resolveActor(rEffect.sSource);
 			processGrant(rEffect.sLabel, rSourceEffect, "GRANTS");
 		end
 	end
 	
-	aTags = {"SGRANTS"}
+	aTags = {"SGRANTS"};
 	for _, nodeCT in pairs(CombatManager.getCombatantNodes()) do
-		local rActor = ActorManager.resolveActor(nodeCT)
-		if rActor ~= rSource then
-			tMatch = EffectsManagerBCE.getEffects(rActor, aTags, rSource)
-			for _,tEffect in pairs(tMatch) do
-				if tEffect.sTag == "SGRANTS" then
+		local rActor = ActorManager.resolveActor(nodeCT);
+		if rActor.sCTNode ~= rSource.sCTNode then
+			tMatch = EffectsManagerBCE.getEffects(rActor, aTags, rSource);
+			for _,rEffect in pairs(tMatch) do
+				if rEffect.sTag == "SGRANTS" then
 					processGrant(rEffect.sLabel, rSource, "SGRANTS");
 				end
 			end
