@@ -13,8 +13,8 @@ The following syntax additions have been made for effect processing:
 
 The following effects have been added:
 * **RSRCHEAL: d, Resource Name** - While this effect is active any time the named resource is spent by the bearer of this effect, the target(s) of the effect is/are healed by d (which can be any dice string). If no target is specified then the bearer is healed.
-* **GRANTS: d, Resource Name** - While this effect is active on the start of the bearer's turn, the applier of the effect will gain d (which can be any dice string) of the named resource. *Requires [Better Combat Effects](https://forge.fantasygrounds.com/shop/items/76/view) to function.*
-* **SGRANTS: d, Resource Name** - While this effect is active on the start of the applier's turn, the applier of the effect will gain d (which can be any dice string) of the named resource. *Requires [Better Combat Effects](https://forge.fantasygrounds.com/shop/items/76/view) to function.*
+* **GRANTS: d, Resource Name** - While this effect is active on the start of the bearer's turn, the applier of the effect will gain d (which can be any dice string) of the named resource.
+* **SGRANTS: d, Resource Name** - While this effect is active on the start of the applier's turn, the applier of the effect will gain d (which can be any dice string) of the named resource.
 
 ## Installation
 Download [CapitalGains.ext](https://github.com/MeAndUnique/CapitalGains/releases) and place in the extensions subfolder of the Fantasy Grounds data folder.
