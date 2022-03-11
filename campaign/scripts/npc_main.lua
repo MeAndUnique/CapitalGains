@@ -13,7 +13,9 @@ function onInit()
 end
 
 function update()
-	updateOriginal();
+	if updateOriginal then -- May have been deleted by another extension.
+		updateOriginal();
+	end
 
 	local nodeRecord = getDatabaseNode();
 	local bReadOnly = WindowManager.getReadOnlyState(nodeRecord);
