@@ -4,9 +4,11 @@
 --
 
 OOB_MSGTYPE_APPLYRESOURCE = "applyresource";
+OOB_MSGTYPE_RESOURCE_HEAL = "resourceheal";
 
 function onInit()
 	OOBManager.registerOOBMsgHandler(OOB_MSGTYPE_APPLYRESOURCE, handleApplyResource);
+	OOBManager.registerOOBMsgHandler(OOB_MSGTYPE_RESOURCE_HEAL, handleResourceHeal);
 
 	ActionsManager.registerModHandler("resource", modResource);
 	ActionsManager.registerResultHandler("resource", onResource);
@@ -297,35 +299,7 @@ function handleSpendEffects(rSource, rTarget, bSecret, nSpend, sResource)
 					bTargeted = true;
 				elseif StringManager.contains(rEffectComp.remainder, sResource) then
 					if StringManager.contains({"RSRCHEALS", "RSRCHEALT"}, rEffectComp.type) then
-						local rAction = {};
-						rAction.label = sResource;
-						rAction.clauses = {};
-
-						local rClause = {};
-						rClause.dice = rEffectComp.dice;
-						rClause.modifier = rEffectComp.mod;
-						table.insert(rAction.clauses, rClause);
-
-						local aTargets = {};
-						if "RSRCHEALS" == rEffectComp.type then
-							table.insert(aTargets, rSource);
-						elseif rTarget and rTarget.sCTNode ~= rSource.sCTNode then
-							table.insert(aTargets, rTarget);
-						else
-							for _,nodeTarget in pairs(DB.getChildren(nodeCT, "targets")) do
-								local rEffectTarget = ActorManager.resolveActor(DB.getValue(nodeTarget, "noderef"));
-								table.insert(aTargets, rEffectTarget);
-							end
-						end
-						if #aTargets == 0 and bSecret == false then
-							table.insert(aTargets, rSource);
-						end
-
-						local rRoll = ActionHeal.getRoll(rSource, rAction);
-						if rRoll then
-							ActionsManager.actionDirect(rSource, rRoll.sType, {rRoll}, {aTargets});
-						end
-
+						notifyResourceHeal(rSource, rTarget, sEffectComp, bSecret, nSpend, sResource)
 						nMatch = nMatch + 1;
 					end
 				end
@@ -348,4 +322,91 @@ function handleSpendEffects(rSource, rTarget, bSecret, nSpend, sResource)
 		end  -- END ACTIVE CHECK
 	end  -- END EFFECT LOOP
 	EffectManagerCg.setActiveActor(nil);
+end
+
+function notifyResourceHeal(rSource, rTarget, sEffectComp, bSecret, nSpend, sResource)
+	local msgOOB = {};
+	msgOOB.type = OOB_MSGTYPE_RESOURCE_HEAL;
+	
+	if bSecret then
+		msgOOB.nSecret = 1;
+	else
+		msgOOB.nSecret = 0;
+	end
+
+	msgOOB.nSpend = nSpend;
+	msgOOB.sResource = sResource;
+	msgOOB.sEffectComp = sEffectComp;
+	
+	msgOOB.sSourceNode = ActorManager.getCreatureNodeName(rSource);
+	msgOOB.sTargetNode = ActorManager.getCreatureNodeName(rTarget);
+	
+	local sTargetNodeType, nodeTarget = ActorManager.getTypeAndNode(rTarget);
+	if nodeTarget and (sTargetNodeType == "pc") then
+		if Session.IsHost then
+			local sOwner = DB.getOwner(nodeTarget);
+			if sOwner ~= "" then
+				for _,vUser in ipairs(User.getActiveUsers()) do
+					if vUser == sOwner then
+						for _,vIdentity in ipairs(User.getActiveIdentities(vUser)) do
+							if nodeTarget.getName() == vIdentity then
+								Comm.deliverOOBMessage(msgOOB, sOwner);
+								return;
+							end
+						end
+					end
+				end
+			end
+		else
+			if DB.isOwner(nodeTarget) then
+				handleResourceHeal(msgOOB);
+				return;
+			end
+		end
+	end
+
+	Comm.deliverOOBMessage(msgOOB, "");
+end
+
+function handleResourceHeal(msgOOB)
+	local rSource = ActorManager.resolveActor(msgOOB.sSourceNode);
+	local rTarget = ActorManager.resolveActor(msgOOB.sTargetNode);
+	local rEffectComp = EffectManager5E.parseEffectComp(msgOOB.sEffectComp);
+	local bSecret = tonumber(msgOOB.nSecret) == 1;
+	
+	local rAction = {};
+	rAction.label = msgOOB.sResource;
+	rAction.clauses = {};
+
+	local rClause = {};
+	rClause.dice = rEffectComp.dice;
+	rClause.modifier = rEffectComp.mod;
+	if #rClause.dice == 0 and rClause.modifier == 0 then
+		rClause.modifier = msgOOB.nSpend
+	end
+	-- The modifier has already been accounted for in the resource expenditure.
+	rClause.modifier = rClause.modifier - ModifierStack.getSum();
+	table.insert(rAction.clauses, rClause);
+
+	local aTargets = {};
+	if "RSRCHEALS" == rEffectComp.type then
+		table.insert(aTargets, rSource);
+	elseif rTarget and rTarget.sCTNode ~= rSource.sCTNode then
+		table.insert(aTargets, rTarget);
+	else
+		local nodeCT = ActorManager.getCTNode(rSource);
+		for _,nodeTarget in pairs(DB.getChildren(nodeCT, "targets")) do
+			local rEffectTarget = ActorManager.resolveActor(DB.getValue(nodeTarget, "noderef"));
+			table.insert(aTargets, rEffectTarget);
+		end
+	end
+	if #aTargets == 0 and bSecret == false then
+		table.insert(aTargets, rSource);
+	end
+	
+	local rRoll = ActionHeal.getRoll(rSource, rAction);
+	if rRoll then
+		rRoll.bSecret = bSecret;
+		ActionsManager.actionDirect(rSource, rRoll.sType, {rRoll}, {aTargets});
+	end
 end
