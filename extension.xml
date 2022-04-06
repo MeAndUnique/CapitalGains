@@ -34,6 +34,9 @@ Icons made by wanicon www.flaticon.com
 		<author>MeAndUnique</author>
 		<description>Adds support for managing custom resources.</description>
 		<loadorder>140</loadorder>
+		<ruleset>
+			<name>5E</name>
+		</ruleset>
 	</properties>
 
 	<base>
