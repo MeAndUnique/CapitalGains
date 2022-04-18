@@ -36,7 +36,7 @@
 				<invisible />
 			</genericcontrol>
 			<basicnumber name="current">
-				<anchored to="leftanchor" width="20" height="20">
+				<anchored to="leftanchor" height="20">
 					<top offset="5" />
 					<left anchor="right" relation="relative" />
 				</anchored>
