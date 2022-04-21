@@ -39,6 +39,9 @@
 				<anchored to="leftanchor" height="20">
 					<top offset="5" />
 					<left anchor="right" relation="relative" />
+					<sizelimits>
+						<minimum width="20" />
+					</sizelimits>
 				</anchored>
 			</basicnumber>
 			<label name="divisor">
@@ -166,7 +169,13 @@
 				<static textres="resource_limit_label" />
 			</label>
 			<basicnumber name="limit">
-				<anchored to="limitlabel" position="righthigh" width="20" height="20" offset="10,0" />
+				<anchored to="limitlabel" height="20">
+					<left anchor="right" offset="10" />
+					<top />
+					<sizelimits>
+						<minimum width="20" />
+					</sizelimits>
+				</anchored>
 				<minvalue>0</minvalue>
 			</basicnumber>
 
