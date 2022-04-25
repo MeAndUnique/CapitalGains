@@ -155,7 +155,7 @@ function applyResource(rSource, rTarget, bSecret, nTotal, sOperation, sResource,
 end
 
 function applyResourceSpend(rSource, rTarget, bSecret, nTotal, sResource, bAll)
-	local nOverflow, nRemaining = ResourceManager.adjustResource(rSource, sResource, "", -nTotal, bAll, bOverSpend);
+	local nRemaining, nOverflow = ResourceManager.adjustResource(rSource, sResource, "", -nTotal, bAll, bOverSpend);
 	if not nOverflow then
 		local msgMissing = {
 			font = "msgfont",
@@ -202,7 +202,7 @@ function applyResourceSpend(rSource, rTarget, bSecret, nTotal, sResource, bAll)
 end
 
 function applyResourceGain(rSource, rTarget, bSecret, nTotal, sResource, bAll)
-	local nOverflow, nRemaining = ResourceManager.adjustResource(rSource, sResource, "gain", nTotal, bAll);
+	local nRemaining, nOverflow = ResourceManager.adjustResource(rSource, sResource, "gain", nTotal, bAll);
 	if not nOverflow then
 		local msgMissing = {
 			font = "msgfont",
@@ -239,7 +239,7 @@ function applyResourceGain(rSource, rTarget, bSecret, nTotal, sResource, bAll)
 end
 
 function applyResourceLoss(rSource, rTarget, bSecret, nTotal, sResource, bAll)
-	local nOverflow, nRemaining = ResourceManager.adjustResource(rSource, sResource, "loss", -nTotal, bAll);
+	local nRemaining, nOverflow = ResourceManager.adjustResource(rSource, sResource, "loss", -nTotal, bAll);
 	if not nOverflow then
 		local msgMissing = {
 			font = "msgfont",
@@ -278,7 +278,7 @@ function handleSpendEffects(rSource, rTarget, bSecret, nSpend, sResource)
 		-- Check active
 		local nActive = DB.getValue(nodeEffect, "isactive", 0);
 		if (nActive ~= 0) then
-			local sLabel = DB.getValue(nodeEffect, "label");
+			local sLabel = DB.getValue(nodeEffect, "label", "");
 			local sApply = DB.getValue(nodeEffect, "apply", "");
 			local aEffectComps = EffectManager.parseEffect(sLabel);
 			local nMatch = 0;

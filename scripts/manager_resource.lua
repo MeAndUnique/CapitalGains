@@ -11,6 +11,8 @@ tRestPriority = {
 	["Extended Rest"] = 3,
 };
 
+local tSpecialResources = {};
+
 function onInit()
 	if Session.IsHost then
 		CombatManager.setCustomTurnStart(onTurnStart);
@@ -30,6 +32,14 @@ function onClose()
 	for _,nodeCombatant in pairs(CombatManager.getCombatantNodes()) do
 		removeResourceHandlers(nodeCombatant);
 	end
+end
+
+function addSpecialResource(sName, fIsMatch, fGetValue, fGetLimit, fGetValueSetters)
+	tSpecialResources[sName] = {fIsMatch = fIsMatch, fGetValue = fGetValue, fGetLimit = fGetLimit, fGetValueSetters = fGetValueSetters};
+end
+
+function removeSpecialResource(sName)
+	tSpecialResources[sName] = nil;
 end
 
 function addResourceHandlers(nodeActor)
@@ -214,7 +224,51 @@ function matchPeriod(sCurrent, sExpected)
 	return false;
 end
 
-function getCurrentResource(rActor, sResource)
+function getResourceNode(rActor, sResource)
+	local nodeActor = ActorManager.getCreatureNode(rActor);
+	for _,nodeResource in pairs(DB.getChildren(nodeActor, "resources")) do
+		if sResource == DB.getValue(nodeResource, "name") then
+			return nodeResource;
+		end
+	end
+end
+
+function getSpecialResourceFunctions(rActor, sResource)
+	for _,rSpecialResourceFunctions in pairs(tSpecialResources) do
+		if rSpecialResourceFunctions.fIsMatch(rActor, sResource) then
+			return rSpecialResourceFunctions;
+		end
+	end
+end
+
+function getNodeAdjustmentFunction(nodeCurrent, nodeLimit, bInvert)
+	return function(nValue)
+		local nLimit = 0;
+		if nodeLimit then
+			nLimit = nodeLimit.getValue();
+		end
+
+		local nCurrent = nodeCurrent.getValue() or 0;
+		if bInvert then
+			nCurrent = nLimit - nCurrent; -- The current value node spends up instead of down.
+		else
+			nLimit = math.max(nCurrent, nLimit); -- Ensure the current value isn't reduced
+		end
+
+		local nResult = nCurrent + nValue;
+		local nResult = math.max(0, math.min(nLimit, nResult));
+
+		if bInvert then
+			nodeCurrent.setValue(nLimit - nResult);
+		else
+			nodeCurrent.setValue(nResult);
+		end
+
+		return nResult, nValue + nCurrent - nResult;
+	end
+end
+
+function getCurrentResource(rActor, sResource, nodeResource)
 	if not rActor then
 		return 0;
 	end
@@ -224,12 +278,26 @@ function getCurrentResource(rActor, sResource)
 		return 0;
 	end
 
-	for _,nodeResource in pairs(DB.getChildren(nodeActor, "resources")) do
-		if sResource == DB.getValue(nodeResource, "name") then
-			return DB.getValue(nodeResource, "current", 0);
+	local nResult = getCurrentSpecial(rActor, sResource)
+	if not nodeResource then
+		for _,nodeChild in pairs(DB.getChildren(nodeActor, "resources")) do
+			if sResource == DB.getValue(nodeChild, "name") then
+				nodeResource = nodeChild;
+			end
 		end
 	end
+	if nodeResource then
+		nResult = nResult + DB.getValue(nodeResource, "current", 0);
+	end
 
+	return nResult;
+end
+
+function getCurrentSpecial(rActor, sResource)
+	local rSpecialResourceFunctions = getSpecialResourceFunctions(rActor, sResource);
+	if rSpecialResourceFunctions then
+		return rSpecialResourceFunctions.fGetValue(rActor, sResource);
+	end
 	return 0;
 end
 
@@ -270,6 +338,10 @@ function clearSpentResources(rActor)
 	aSpentResources[sActor] = {};
 end
 
+-- Returns two numbers, or nil if the resource couldn't be found.
+-- The first number represents the amount of the resource that remains after adjustment.
+-- The second number is extra information that varies based on the operation,
+-- how must is being adjusted, and how much is there to begin with
 function adjustResource(rActor, sResource, sOperation, nAdjust, bAll)
 	if not rActor then
 		return;
@@ -280,70 +352,72 @@ function adjustResource(rActor, sResource, sOperation, nAdjust, bAll)
 		return;
 	end
 
-	for _,nodeResource in pairs(DB.getChildren(nodeActor, "resources")) do
-		if sResource == DB.getValue(nodeResource, "name") then
-			if sOperation == "loss" then
-				return loseResource(nodeResource, nAdjust, bAll);
-			elseif sOperation == "gain" then
-				return gainResource(sResource, nodeResource, nAdjust, bAll);
-			else
-				return spendResource(rActor, sResource, nodeResource, nAdjust, bAll);
+	local nRemaining, nOverflow;
+	local bAllowOverSpend = true;
+	if bAll then
+		if sOperation == "gain" then
+			nAdjust = math.huge;
+		else
+			nAdjust = -math.huge;
+		end
+	elseif sOperation == "" then
+		bAllowOverSpend = false;
+	end
+	local bTrackSpent = sOperation == "";
+
+	nRemaining, nOverflow = spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent);
+	return nRemaining, nOverflow;
+end
+
+-- The first return value represents the amount of the resource that remains after adjustment.
+-- The second return value is the amount spent if bAll is true,
+-- otherwise it is the amount by which the adjustment exceeds the resource, if any.
+function spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent)
+	local nRemaining = 0;
+	local nOverflow = 0;
+
+	local nodeResource = getResourceNode(rActor, sResource);
+	local rSpecialResourceFunctions = getSpecialResourceFunctions(rActor, sResource);
+
+	local aValueSetters = {};
+	if nodeResource then
+		local nodeCurrent = DB.createChild(nodeResource, "current", "number");
+		local nodeLimit = DB.getChild(nodeResource, "limit");
+		table.insert(aValueSetters, getNodeAdjustmentFunction(nodeCurrent, nodeLimit));
+	end
+	if rSpecialResourceFunctions then
+		for _,fValueSetter in ipairs(rSpecialResourceFunctions.fGetValueSetters(rActor, sResource)) do
+			table.insert(aValueSetters, fValueSetter);
+		end
+	end
+
+	if #aValueSetters == 0 then
+		return;
+	end
+
+	local nTotal = getCurrentResource(rActor, sResource, nodeResource);
+	if bAllowOverSpend or (nTotal >= math.abs(nAdjust)) then
+		local nCurrent;
+		local nNewTotal = 0;
+		for _,fValueSetter in ipairs(aValueSetters) do
+			nCurrent, nAdjust = fValueSetter(nAdjust);
+			nNewTotal = nNewTotal + nCurrent;
+			if nAdjust == 0 then
+				break;
 			end
 		end
-	end
 
-	return;
-end
-
-function gainResource(sResource, nodeResource, nAdjust, bAll)
-	local nCurrent = DB.getValue(nodeResource, "current", 0);
-	local nLimit = DB.getValue(nodeResource, "limit", 0);
-
-	if bAll then
-		if nLimit > 0 then
-			DB.setValue(nodeResource, "current", "number", nLimit);
-			nCurrent = nLimit;
+		nRemaining = nNewTotal;
+		nOverflow = math.abs(nAdjust);
+		
+		if bTrackSpent then
+			setSpentResource(rActor, sResource, nTotal - nNewTotal);
 		end
-		return nLimit - nCurrent, nCurrent;
 	else
-		local nTarget = nCurrent + nAdjust;
-		local nResult = nTarget;
-		if nLimit > 0 then
-			nResult = math.min(nLimit, nTarget);
-		end
-
-		DB.setValue(nodeResource, "current", "number", nResult);
-		return nTarget - nResult, nResult;
+		nRemaining = nTotal;
+		nOverflow = math.abs(nAdjust) - nTotal;
 	end
-end
 
-function spendResource(rActor, sResource, nodeResource, nAdjust, bAll)
-	local nCurrent = DB.getValue(nodeResource, "current", 0);
-	if bAll then
-		setSpentResource(rActor, sResource, nCurrent);
-		DB.setValue(nodeResource, "current", "number", 0);
-		return nCurrent, 0;
-	else
-		local nTarget = nCurrent + nAdjust;
-		if nTarget >= 0 then
-			setSpentResource(rActor, sResource, -nAdjust);
-			DB.setValue(nodeResource, "current", "number", nTarget);
-			return 0, nTarget;
-		else
-			return -nTarget, nCurrent;
-		end
-	end
-end
-
-function loseResource(nodeResource, nAdjust, bAll)
-	local nCurrent = DB.getValue(nodeResource, "current", 0);
-	if bAll then
-		DB.setValue(nodeResource, "current", "number", 0);
-		return nCurrent, 0;
-	else
-		local nTarget = nCurrent + nAdjust;
-		local nResult = math.max(0, nTarget);
-		DB.setValue(nodeResource, "current", "number", nResult);
-		return nResult - nTarget, nResult;
-	end
+	
+	return nRemaining, nOverflow;
 end

@@ -58,7 +58,10 @@
 					end
 					function onValueChanged()
 						local value = "∞";
-						if getValue() ~= 0 then value = tostring(getValue()) end
+						local nodeResource = window.getDatabaseNode();
+						local rActor = ActorManager.resolveActor(nodeResource.getChild("..."));
+						local nValue = ResourceManager.getCurrentResource(rActor, window.name.getValue(), nodeResource);
+						if nValue ~= 0 then value = tostring(nValue) end
 						window.limitdisplay.setValue(value);
 					end
 				</script>
