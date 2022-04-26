@@ -34,8 +34,8 @@ function onClose()
 	end
 end
 
-function addSpecialResource(sName, fIsMatch, fGetValue, fGetLimit, fGetValueSetters)
-	tSpecialResources[sName] = {fIsMatch = fIsMatch, fGetValue = fGetValue, fGetLimit = fGetLimit, fGetValueSetters = fGetValueSetters};
+function addSpecialResource(sName, rSpecialResourceFunctions)
+	tSpecialResources[sName] = rSpecialResourceFunctions;
 end
 
 function removeSpecialResource(sName)
@@ -168,8 +168,9 @@ function calculateResourcePeriod(rActor, sPeriod)
 		for _,nodeResource in pairs(DB.getChildren(nodeActor, "resources")) do
 			if matchPeriod(sPeriod, DB.getValue(nodeResource, "gainperiod", "")) then
 				local rAction = {};
+				rAction.bExcludeSpecial = true;
 				rAction.type = "resource";
-				rAction.operation = "gain";
+				rAction.operation = "recoup";
 				rAction.label = "Resource Gain";
 				rAction.resource = DB.getValue(nodeResource, "name", "");
 				rAction.all = DB.getValue(nodeResource, "gainall", 0) == 1;
@@ -188,6 +189,7 @@ function calculateResourcePeriod(rActor, sPeriod)
 			end
 			if matchPeriod(sPeriod, DB.getValue(nodeResource, "lossperiod", "")) then
 				local rAction = {};
+				rAction.bExcludeSpecial = true;
 				rAction.type = "resource";
 				rAction.operation = "loss";
 				rAction.label = "Resource Loss";
@@ -268,6 +270,39 @@ function getNodeAdjustmentFunction(nodeCurrent, nodeLimit, bInvert)
 	end
 end
 
+function getResourceLimit(rActor, sResource, nodeResource)
+	if not rActor then
+		return 0;
+	end
+
+	local nodeActor = ActorManager.getCreatureNode(rActor);
+	if not nodeActor then
+		return 0;
+	end
+
+	local nResult = getSpecialLimit(rActor, sResource)
+	if not nodeResource then
+		for _,nodeChild in pairs(DB.getChildren(nodeActor, "resources")) do
+			if sResource == DB.getValue(nodeChild, "name") then
+				nodeResource = nodeChild;
+			end
+		end
+	end
+	if nodeResource then
+		nResult = nResult + DB.getValue(nodeResource, "limit", 0);
+	end
+
+	return nResult;
+end
+
+function getSpecialLimit(rActor, sResource)
+	local rSpecialResourceFunctions = getSpecialResourceFunctions(rActor, sResource);
+	if rSpecialResourceFunctions then
+		return rSpecialResourceFunctions.fGetLimit(rActor, sResource);
+	end
+	return 0;
+end
+
 function getCurrentResource(rActor, sResource, nodeResource)
 	if not rActor then
 		return 0;
@@ -342,7 +377,7 @@ end
 -- The first number represents the amount of the resource that remains after adjustment.
 -- The second number is extra information that varies based on the operation,
 -- how must is being adjusted, and how much is there to begin with
-function adjustResource(rActor, sResource, sOperation, nAdjust, bAll)
+function adjustResource(rActor, sResource, nAdjust, sOperation, bAll)
 	if not rActor then
 		return;
 	end
@@ -354,30 +389,34 @@ function adjustResource(rActor, sResource, sOperation, nAdjust, bAll)
 
 	local nRemaining, nOverflow;
 	local bAllowOverSpend = true;
+	local bExcludeSpecial = (sOperation == "loss") or (sOperation == "recoup");
 	if bAll then
-		if sOperation == "gain" then
+		if (sOperation == "gain") or (sOperation == "recoup") then
 			nAdjust = math.huge;
 		else
 			nAdjust = -math.huge;
 		end
-	elseif sOperation == "" then
+	elseif (sOperation or "") == "" then
 		bAllowOverSpend = false;
 	end
 	local bTrackSpent = sOperation == "";
 
-	nRemaining, nOverflow = spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent);
+	nRemaining, nOverflow = spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent, bExcludeSpecial);
 	return nRemaining, nOverflow;
 end
 
 -- The first return value represents the amount of the resource that remains after adjustment.
 -- The second return value is the amount spent if bAll is true,
 -- otherwise it is the amount by which the adjustment exceeds the resource, if any.
-function spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent)
+function spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent, bExcludeSpecial)
 	local nRemaining = 0;
 	local nOverflow = 0;
 
 	local nodeResource = getResourceNode(rActor, sResource);
-	local rSpecialResourceFunctions = getSpecialResourceFunctions(rActor, sResource);
+	local rSpecialResourceFunctions;
+	if not bExcludeSpecial then
+		rSpecialResourceFunctions = getSpecialResourceFunctions(rActor, sResource);
+	end
 
 	local aValueSetters = {};
 	if nodeResource then
@@ -386,8 +425,14 @@ function spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent)
 		table.insert(aValueSetters, getNodeAdjustmentFunction(nodeCurrent, nodeLimit));
 	end
 	if rSpecialResourceFunctions then
-		for _,fValueSetter in ipairs(rSpecialResourceFunctions.fGetValueSetters(rActor, sResource)) do
-			table.insert(aValueSetters, fValueSetter);
+		local aSpecialValueSetters = rSpecialResourceFunctions.fGetValueSetters(rActor, sResource);
+		for i=1,#aSpecialValueSetters do
+			local index = i;
+			if nAdjust > 0 then
+				-- Reverse iteration when gaining resources for symmetry.
+				index = #aSpecialValueSetters + 1 - i;
+			end
+			table.insert(aValueSetters, aSpecialValueSetters[index]);
 		end
 	end
 
@@ -402,9 +447,6 @@ function spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent)
 		for _,fValueSetter in ipairs(aValueSetters) do
 			nCurrent, nAdjust = fValueSetter(nAdjust);
 			nNewTotal = nNewTotal + nCurrent;
-			if nAdjust == 0 then
-				break;
-			end
 		end
 
 		nRemaining = nNewTotal;
@@ -420,4 +462,18 @@ function spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent)
 
 	
 	return nRemaining, nOverflow;
+end
+
+function addSpecialResourceChangeHandlers(rActor, sResource, fCurrentHandler, fLimitHandler)
+	local rSpecialResourceFunctions = getSpecialResourceFunctions(rActor, sResource);
+	if rSpecialResourceFunctions then
+		return rSpecialResourceFunctions.fAddHandlers(rActor, sResource, fCurrentHandler, fLimitHandler);
+	end
+end
+
+function removeSpecialResourceChangeHandlers(rActor, sResource, fCurrentHandler, fLimitHandler)
+	local rSpecialResourceFunctions = getSpecialResourceFunctions(rActor, sResource);
+	if rSpecialResourceFunctions then
+		return rSpecialResourceFunctions.fRemoveHandlers(rActor, sResource, fCurrentHandler, fLimitHandler);
+	end
 end

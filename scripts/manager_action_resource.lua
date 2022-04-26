@@ -145,17 +145,17 @@ end
 function applyResource(rSource, rTarget, bSecret, nTotal, sOperation, sResource, bAll)
 	if rSource then
 		if sOperation == "loss" then
-			applyResourceLoss(rSource, rTarget, bSecret, nTotal, sResource, bAll)
-		elseif sOperation == "gain" then
-			applyResourceGain(rSource, rTarget, bSecret, nTotal, sResource, bAll)
+			applyResourceLoss(rSource, rTarget, bSecret, nTotal, sOperation, sResource, bAll)
+		elseif (sOperation == "gain") or (sOperation == "recoup") then
+			applyResourceGain(rSource, rTarget, bSecret, nTotal, sOperation, sResource, bAll)
 		else
-			applyResourceSpend(rSource, rTarget, bSecret, nTotal, sResource, bAll)
+			applyResourceSpend(rSource, rTarget, bSecret, nTotal, sOperation, sResource, bAll)
 		end
 	end
 end
 
-function applyResourceSpend(rSource, rTarget, bSecret, nTotal, sResource, bAll)
-	local nRemaining, nOverflow = ResourceManager.adjustResource(rSource, sResource, "", -nTotal, bAll, bOverSpend);
+function applyResourceSpend(rSource, rTarget, bSecret, nTotal, sOperation, sResource, bAll)
+	local nRemaining, nOverflow = ResourceManager.adjustResource(rSource, sResource, -nTotal, sOperation, bAll);
 	if not nOverflow then
 		local msgMissing = {
 			font = "msgfont",
@@ -201,8 +201,8 @@ function applyResourceSpend(rSource, rTarget, bSecret, nTotal, sResource, bAll)
 	end
 end
 
-function applyResourceGain(rSource, rTarget, bSecret, nTotal, sResource, bAll)
-	local nRemaining, nOverflow = ResourceManager.adjustResource(rSource, sResource, "gain", nTotal, bAll);
+function applyResourceGain(rSource, rTarget, bSecret, nTotal, sOperation, sResource, bAll)
+	local nRemaining, nOverflow = ResourceManager.adjustResource(rSource, sResource, nTotal, sOperation, bAll);
 	if not nOverflow then
 		local msgMissing = {
 			font = "msgfont",
@@ -238,8 +238,8 @@ function applyResourceGain(rSource, rTarget, bSecret, nTotal, sResource, bAll)
 	ActionsManager.outputResult(bSecret, rSource, nil, msgLong, msgShort);
 end
 
-function applyResourceLoss(rSource, rTarget, bSecret, nTotal, sResource, bAll)
-	local nRemaining, nOverflow = ResourceManager.adjustResource(rSource, sResource, "loss", -nTotal, bAll);
+function applyResourceLoss(rSource, rTarget, bSecret, nTotal, sOperation, sResource, bAll)
+	local nRemaining, nOverflow = ResourceManager.adjustResource(rSource, sResource, -nTotal, sOperation, bAll);
 	if not nOverflow then
 		local msgMissing = {
 			font = "msgfont",

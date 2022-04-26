@@ -3,17 +3,30 @@
 -- attribution and copyright information.
 --
 
+local nodeResource;
+local rActor;
+local sRegisteredName;
+
 function onInit()
+	nodeResource = getDatabaseNode();
+	rActor = ActorManager.resolveActor(nodeResource.getChild("..."));
 	addPeriodOptions(gainperiod);
 	addPeriodOptions(lossperiod);
+	DB.addHandler(DB.getPath(nodeResource, "name"), "onUpdate", onNameChanged);
 	limit.onValueChanged = onLimitChanged;
 	gainperiod.onValueChanged = refreshGainValues;
 	gainall.onValueChanged = refreshGainValues;
 	lossall.onValueChanged = refreshLossValues;
 	lossperiod.onValueChanged = refreshLossValues;
+	addSpecialHandlers();
 
 	onLimitChanged();
 	update();
+end
+
+function onClose()
+	DB.removeHandler(DB.getPath(nodeResource, "name"), "onUpdate", onNameChanged);
+	removeSpecialHandlers();
 end
 
 function addPeriodOptions(control)
@@ -39,12 +52,11 @@ function onDrop(x, y, draginfo)
 		local sClass, sRecord = draginfo.getShortcutData();
 		local nodeTarget = DB.findNode(sRecord);
 		if nodeTarget and StringManager.contains({"charsheet", "npc"}, sClass) then
-			local node = getDatabaseNode();
-			local sName = DB.getValue(node, "name");
+			local sName = DB.getValue(nodeResource, "name");
 			local nodeMatch;
-			for _,nodeResource in pairs(DB.getChildren(nodeTarget, "resources")) do
-				if sName == DB.getValue(nodeResource, "name") then
-					nodeMatch = nodeResource;
+			for _,nodeOtherResource in pairs(DB.getChildren(nodeTarget, "resources")) do
+				if sName == DB.getValue(nodeOtherResource, "name") then
+					nodeMatch = nodeOtherResource;
 					break;
 				end
 			end
@@ -53,12 +65,12 @@ function onDrop(x, y, draginfo)
 				local nodeResources = DB.createChild(nodeTarget, "resources");
 				nodeMatch = DB.createChild(nodeResources);
 			end
-			DB.copyNode(node, nodeMatch);
+			DB.copyNode(nodeResource, nodeMatch);
 
 			local nodeList = DB.createChild(nodeMatch, "share");
 			local nodeShareOther = DB.createChild(nodeList);
 
-			local sPath = node.getPath();
+			local sPath = nodeResource.getPath();
 			DB.setValue(nodeShareOther, "class", "string", ActorManager.getActorRecordTypeFromPath(sPath));
 			DB.setValue(nodeShareOther, "record", "string", sPath);
 
@@ -69,7 +81,7 @@ function onDrop(x, y, draginfo)
 end
 
 function update()
-	local bReadOnly = WindowManager.getReadOnlyState(getDatabaseNode());
+	local bReadOnly = WindowManager.getReadOnlyState(nodeResource);
 	limit.setReadOnly(bReadOnly);
 
 	gainperiod.setComboBoxReadOnly(bReadOnly);
@@ -117,12 +129,33 @@ function update()
 	end
 end
 
+function onNameChanged()
+	removeSpecialHandlers();
+	addSpecialHandlers();
+	onLimitChanged();
+end
+
+function addSpecialHandlers()
+	sRegisteredName = DB.getValue(nodeResource, "name", "");
+	ResourceManager.addSpecialResourceChangeHandlers(rActor, sRegisteredName, nil, onLimitChanged);
+end
+
+function removeSpecialHandlers()
+	ResourceManager.removeSpecialResourceChangeHandlers(rActor, sRegisteredName, nil, onLimitChanged);
+end
+
 function onLimitChanged()
 	refreshGainValues();
 	refreshLossValues();
 end
 
 function refreshGainValues()
+	local nLimit = ResourceManager.getResourceLimit(rActor, DB.getValue(nodeResource, "name", ""), nodeResource);
+	speciallimitlabel.setVisible(nLimit ~= limit.getValue());
+	if nLimit ~= limit.getValue() then
+		speciallimitlabel.setValue((nLimit - limit.getValue()) .. " +");
+	end
+
 	local bHasLimit = limit.getValue() ~= 0
 	if  not bHasLimit then
 		gainall.setValue(0);

@@ -9,7 +9,15 @@ function onInit()
 	restOriginal = CharManager.rest;
 	CharManager.rest = rest;
 
-	ResourceManager.addSpecialResource("Hit Dice", isHitDieResource, getCurrentHitDice, getHitDiceLimit, getHitDiceSetters);
+	ResourceManager.addSpecialResource("Hit Dice",
+	{
+		fIsMatch = isHitDieResource,
+		fGetValue = getCurrentHitDice,
+		fGetLimit = getHitDiceLimit,
+		fGetValueSetters = getHitDiceSetters,
+		fAddHandlers = addHitDiceChangedHandlers,
+		fRemoveHandlers = removeHitDiceChangedHandlers
+	});
 end
 
 function rest(nodeChar, bLong)
@@ -21,7 +29,6 @@ function getHitDice(rActor, sResource)
 	local aHitDice = {};
 	local sTargetClass, bMatch = sResource:lower():match("(.*) ?(hit dice)");
 	sTargetClass = StringManager.trim(sTargetClass);
-	Debug.chat("getHitDice", sTargetClass, bMatch);
 	if not bMatch then
 		return aHitDice;
 	end
@@ -32,8 +39,6 @@ function getHitDice(rActor, sResource)
 		if #aClassDice > 0 then
 			local nClassHDSides = tonumber(aClassDice[1]:sub(2)) or 0;
 			local sClass = DB.getValue(nodeClass, "name", ""):lower();
-			Debug.chat("getHitDice - inner", nClassHDSides, sTargetClass, sClass)
-			Debug.chat("getHitDice - inner2", nClassHDSides > 0, (sTargetClass or "") == "", sTargetClass == sClass)
 			if (nClassHDSides > 0)
 			and (((sTargetClass or "") == "")
 			or (sTargetClass == sClass)) then
@@ -51,7 +56,6 @@ end
 
 function isHitDieResource(rActor, sResource)
 	local aHitDice = getHitDice(rActor, sResource);
-	Debug.chat("isHitDieResource", rActor, sResource, aHitDice);
 	return #aHitDice > 0;
 end
 
@@ -84,4 +88,28 @@ function getHitDiceSetters(rActor, sResource)
 		table.insert(aValueSetters, ResourceManager.getNodeAdjustmentFunction(nodeCurrent, nodeLimit, true));
 	end
 	return aValueSetters;
+end
+
+function addHitDiceChangedHandlers(rActor, sResource, fCurrentHandler, fLimitHandler)
+	local aHitDice = getHitDice(rActor, sResource);
+	for _,rHitDie in ipairs(aHitDice) do
+		if fCurrentHandler then
+			DB.addHandler(DB.getPath(rHitDie.nodeClass, "hdused"), "onUpdate", fCurrentHandler);
+		end
+		if fLimitHandler then
+			DB.addHandler(DB.getPath(rHitDie.nodeClass, "level"), "onUpdate", fLimitHandler);
+		end
+	end
+end
+
+function removeHitDiceChangedHandlers(rActor, sResource, fCurrentHandler, fLimitHandler)
+	local aHitDice = getHitDice(rActor, sResource);
+	for _,rHitDie in ipairs(aHitDice) do
+		if fCurrentHandler then
+			DB.removeHandler(DB.getPath(rHitDie.nodeClass, "hdused"), "onUpdate", fCurrentHandler);
+		end
+		if fLimitHandler then
+			DB.removeHandler(DB.getPath(rHitDie.nodeClass, "level"), "onUpdate", fLimitHandler);
+		end
+	end
 end
