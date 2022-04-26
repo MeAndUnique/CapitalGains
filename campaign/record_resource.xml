@@ -2,6 +2,7 @@
 <root>
 	<windowclass name="resource_item">
 		<margins control="3,0,3,5" />
+		<script file="campaign/scripts/resource_item.lua" />
 		<sheetdata>
 			<genericcontrol name="rightanchor">
 				<anchored width="0" height="0">
@@ -35,7 +36,7 @@
 				</anchored>
 				<invisible />
 			</genericcontrol>
-			<basicnumber name="current">
+			<basicnumberc name="current">
 				<anchored to="leftanchor" height="20">
 					<top offset="5" />
 					<left anchor="right" relation="relative" />
@@ -43,7 +44,8 @@
 						<minimum width="20" />
 					</sizelimits>
 				</anchored>
-			</basicnumber>
+				<min>0</min>
+			</basicnumberc>
 			<label name="divisor">
 				<anchored to="leftanchor" width="5">
 					<top offset="5" />
@@ -51,18 +53,6 @@
 				</anchored>
 				<static>/</static>
 			</label>
-			<hn name="limit">
-				<script>
-					function onInit()
-						onValueChanged();
-					end
-					function onValueChanged()
-						local value = "∞";
-						if getValue() ~= 0 then value = tostring(getValue()) end
-						window.limitdisplay.setValue(value);
-					end
-				</script>
-			</hn>
 			<stringcontrol name="limitdisplay">
 				<anchored to="leftanchor" height="20">
 					<top offset="5" />
@@ -161,16 +151,30 @@
 		<sheetdata>
 			<anchor_column name="columnanchor" />
 
+			<genericcontrol name="leftlimitanchor">
+				<anchored width="0" height="0">
+					<top />
+					<left />
+				</anchored>
+				<invisible />
+			</genericcontrol>
 			<label name="limitlabel">
 				<anchored to="columnanchor" height="20">
-					<left offset="5" />
+					<left parent="leftlimitanchor" anchor="right" relation="relative" offset="5" />
 					<top anchor="bottom" relation="relative" offset="7" />
 				</anchored>
 				<static textres="resource_limit_label" />
 			</label>
+			<label name="speciallimitlabel">
+				<anchored to="limitlabel" height="20">
+					<left parent="leftlimitanchor" anchor="right" relation="relative" offset="5" />
+					<top />
+				</anchored>
+				<invisible />
+			</label>
 			<basicnumber name="limit">
 				<anchored to="limitlabel" height="20">
-					<left anchor="right" offset="10" />
+					<left parent="leftlimitanchor" anchor="right" relation="relative" offset="10" />
 					<top />
 					<sizelimits>
 						<minimum width="20" />
