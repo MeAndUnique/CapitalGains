@@ -396,7 +396,7 @@ function adjustResource(rActor, sResource, nAdjust, sOperation, bAll)
 		else
 			nAdjust = -math.huge;
 		end
-	elseif (sOperation or "") == "" then
+	elseif sOperation == "" then
 		bAllowOverSpend = false;
 	end
 	local bTrackSpent = sOperation == "";
@@ -441,7 +441,7 @@ function spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent,
 	end
 
 	local nTotal = getCurrentResource(rActor, sResource, nodeResource);
-	if bAllowOverSpend or (nTotal >= math.abs(nAdjust)) then
+	if bAllowOverSpend or (nTotal >= -nAdjust) then
 		local nCurrent;
 		local nNewTotal = 0;
 		for _,fValueSetter in ipairs(aValueSetters) do
