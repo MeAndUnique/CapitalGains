@@ -243,11 +243,14 @@ function getSpecialResourceFunctions(rActor, sResource)
 	end
 end
 
-function getNodeAdjustmentFunction(nodeCurrent, nodeLimit, bInvert)
+function getNodeAdjustmentFunction(nodeCurrent, nodeLimit, bInvert, bZeroIsUnlimited)
 	return function(nValue)
 		local nLimit = 0;
 		if nodeLimit then
 			nLimit = nodeLimit.getValue();
+		end
+		if bZeroIsUnlimited and (nLimit == 0) then
+			nLimit = math.huge;
 		end
 
 		local nCurrent = nodeCurrent.getValue() or 0;
@@ -422,7 +425,7 @@ function spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent,
 	if nodeResource then
 		local nodeCurrent = DB.createChild(nodeResource, "current", "number");
 		local nodeLimit = DB.getChild(nodeResource, "limit");
-		table.insert(aValueSetters, getNodeAdjustmentFunction(nodeCurrent, nodeLimit));
+		table.insert(aValueSetters, getNodeAdjustmentFunction(nodeCurrent, nodeLimit, false, true));
 	end
 	if rSpecialResourceFunctions then
 		local aSpecialValueSetters = rSpecialResourceFunctions.fGetValueSetters(rActor, sResource);
