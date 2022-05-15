@@ -3,7 +3,7 @@
 -- attribution and copyright information.
 --
 
-local aSpentResources = {};
+local tSpentResources = {};
 
 tRestPriority = {
 	["Short Rest"] = 1,
@@ -340,15 +340,14 @@ function getCurrentSpecial(rActor, sResource)
 end
 
 function getSpentResource(rActor, sResource)
-	local sActor = ActorManager.getCreatureNodeName(rActor);
-	if sActor == "" then
+	local nodeActor = ActorManager.getCreatureNode(rActor);
+	if not nodeActor then
 		return 0;
 	end
 
-	if aSpentResources[sActor] then
-		if aSpentResources[sActor][sResource] then
-			local nSpent = aSpentResources[sActor][sResource];
-			return nSpent;
+	for _,nodeResource in pairs(DB.getChildren(nodeActor, "resources")) do
+		if DB.getValue(nodeResource, "name") == sResource then
+			return DB.getValue(nodeResource, "spent", 0);
 		end
 	end
 
@@ -356,24 +355,31 @@ function getSpentResource(rActor, sResource)
 end
 
 function setSpentResource(rActor, sResource, nSpent)
-	local sActor = ActorManager.getCreatureNodeName(rActor);
-	if sActor == "" then
+	local nodeActor = ActorManager.getCreatureNode(rActor);
+	if not nodeActor then
 		return;
 	end
 
-	if not aSpentResources[sActor] then
-		aSpentResources[sActor] = {};
+	for _,nodeResource in pairs(DB.getChildren(nodeActor, "resources")) do
+		if DB.getValue(nodeResource, "name") == sResource then
+			DB.setValue(nodeResource, "spent", "number", nSpent);
+			break;
+		end
 	end
-	aSpentResources[sActor][sResource] = nSpent;
 end
 
 function clearSpentResources(rActor)
-	local sActor = ActorManager.getCreatureNodeName(rActor);
-	if sActor == "" then
+	local nodeActor = ActorManager.getCreatureNode(rActor);
+	if not nodeActor then
 		return;
 	end
 
-	aSpentResources[sActor] = {};
+	for _,nodeResource in pairs(DB.getChildren(nodeActor, "resources")) do
+		if DB.getValue(nodeResource, "name") == sResource then
+			DB.deleteChild(nodeResource, "spent");
+			break;
+		end
+	end
 end
 
 -- Returns two numbers, or nil if the resource couldn't be found.
