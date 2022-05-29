@@ -1,9 +1,7 @@
--- 
--- Please see the license.txt file included with this distribution for 
+--
+-- Please see the license.txt file included with this distribution for
 -- attribution and copyright information.
 --
-
-local tSpentResources = {};
 
 tRestPriority = {
 	["Short Rest"] = 1,
@@ -55,7 +53,7 @@ function removeResourceHandlers(nodeActor)
 	local sActorPath = ActorManager.getCreatureNodeName(nodeActor);
 	DB.removeHandler(sActorPath .. ".resources.*.current", "onUpdate", synchronizeResourceField);
 	DB.removeHandler(sActorPath .. ".resources.*.limit", "onUpdate", synchronizeResourceField);
-	
+
 	DB.removeHandler(sActorPath .. ".resources.*.share.*.record", "onUpdate", onUpdateSharedResource);
 	DB.removeHandler(sActorPath .. ".resources.*.share.*.record", "onDelete", onDeleteSharedResource);
 end
@@ -182,7 +180,7 @@ function calculateResourcePeriod(rActor, sPeriod)
 				end
 
 				PowerManager.evalAction(rActor, nil, rAction);
-				rRoll = ActionResource.getRoll(rActor, rAction);
+				local rRoll = ActionResource.getRoll(rActor, rAction);
 				if rRoll then
 					ActionsManager.performMultiAction(nil, rActor, rRoll.sType, {rRoll});
 				end
@@ -203,7 +201,7 @@ function calculateResourcePeriod(rActor, sPeriod)
 				end
 
 				PowerManager.evalAction(rActor, nil, rAction);
-				rRoll = ActionResource.getRoll(rActor, rAction);
+				local rRoll = ActionResource.getRoll(rActor, rAction);
 				if rRoll then
 					ActionsManager.performMultiAction(nil, rActor, rRoll.sType, {rRoll});
 				end
@@ -261,7 +259,7 @@ function getNodeAdjustmentFunction(nodeCurrent, nodeLimit, bInvert, bZeroIsUnlim
 		end
 
 		local nResult = nCurrent + nValue;
-		local nResult = math.max(0, math.min(nLimit, nResult));
+		nResult = math.max(0, math.min(nLimit, nResult));
 
 		if bInvert then
 			nodeCurrent.setValue(nLimit - nResult);
@@ -375,10 +373,7 @@ function clearSpentResources(rActor)
 	end
 
 	for _,nodeResource in pairs(DB.getChildren(nodeActor, "resources")) do
-		if DB.getValue(nodeResource, "name") == sResource then
-			DB.deleteChild(nodeResource, "spent");
-			break;
-		end
+		DB.deleteChild(nodeResource, "spent");
 	end
 end
 
@@ -396,7 +391,6 @@ function adjustResource(rActor, sResource, nAdjust, sOperation, bAll)
 		return;
 	end
 
-	local nRemaining, nOverflow;
 	local bAllowOverSpend = true;
 	local bExcludeSpecial = (sOperation == "loss") or (sOperation == "recoup");
 	if bAll then
@@ -410,17 +404,14 @@ function adjustResource(rActor, sResource, nAdjust, sOperation, bAll)
 	end
 	local bTrackSpent = sOperation == "";
 
-	nRemaining, nOverflow = spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent, bExcludeSpecial);
-	return nRemaining, nOverflow;
+	return spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent, bExcludeSpecial);
 end
 
 -- The first return value represents the amount of the resource that remains after adjustment.
 -- The second return value is the amount spent if bAll is true,
 -- otherwise it is the amount by which the adjustment exceeds the resource, if any.
 function spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent, bExcludeSpecial)
-	local nRemaining = 0;
-	local nOverflow = 0;
-
+	local nRemaining, nOverflow;
 	local nodeResource = getResourceNode(rActor, sResource);
 	local rSpecialResourceFunctions;
 	if not bExcludeSpecial then
@@ -460,7 +451,7 @@ function spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent,
 
 		nRemaining = nNewTotal;
 		nOverflow = math.abs(nAdjust);
-		
+
 		if bTrackSpent then
 			setSpentResource(rActor, sResource, nTotal - nNewTotal);
 		end
@@ -469,7 +460,6 @@ function spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent,
 		nOverflow = math.abs(nAdjust) - nTotal;
 	end
 
-	
 	return nRemaining, nOverflow;
 end
 

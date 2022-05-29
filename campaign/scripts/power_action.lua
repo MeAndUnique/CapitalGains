@@ -1,5 +1,5 @@
--- 
--- Please see the license.txt file included with this distribution for 
+--
+-- Please see the license.txt file included with this distribution for
 -- attribution and copyright information.
 --
 
@@ -10,14 +10,15 @@ local rActor;
 local sRegisteredName;
 
 function onInit()
-	rActor = ActorManager.resolveActor(getDatabaseNode().getChild("....."));
+	local nodeAction = getDatabaseNode();
+	rActor = ActorManager.resolveActor(nodeAction.getChild("....."));
 
 	updateDisplayOriginal = super.updateDisplay;
 	super.updateDisplay = updateDisplay;
 
 	onDataChangedOriginal = super.onDataChanged;
 	super.onDataChanged = onDataChanged;
-	
+
 	DB.addHandler(DB.getPath(nodeAction, "resource"), "onUpdate", onResourceNameChanged);
 	addSpecialHandlers();
 
@@ -28,17 +29,19 @@ function onClose()
 	if super and super.onClose then
 		super.onClose();
 	end
+
+	local nodeAction = getDatabaseNode();
 	DB.removeHandler(DB.getPath(nodeAction, "resource"), "onUpdate", onResourceNameChanged);
 	removeSpecialHandlers();
 end
 
 function updateDisplay()
 	updateDisplayOriginal();
-	
+
 	local node = getDatabaseNode();
 	local sType = DB.getValue(node, "type", "");
 	local bShowResource = (sType == "resource");
-	
+
 	resourcebutton.setVisible(bShowResource);
 	resourcelabel.setVisible(bShowResource);
 	resourceview.setVisible(bShowResource);
@@ -47,7 +50,7 @@ end
 
 function onDataChanged()
 	onDataChangedOriginal();
-	
+
 	local sType = DB.getValue(getDatabaseNode(), "type", "");
 	if sType == "resource" then
 		onResourceChanged();

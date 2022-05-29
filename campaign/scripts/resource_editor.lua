@@ -97,16 +97,16 @@ function update()
 	lossstat.setReadOnly(bReadOnly);
 	lossstatmult.setReadOnly(bReadOnly);
 	lossmodifier.setReadOnly(bReadOnly);
-	
+
 	if bReadOnly then
 		limit.setFrame(nil);
-		
+
 		gainperiod.setFrame(nil);
 		gaindice.setFrame(nil);
 		gainstat.setFrame(nil);
 		gainstatmult.setFrame(nil);
 		gainmodifier.setFrame(nil);
-		
+
 		lossperiod.setFrame(nil);
 		lossdice.setFrame(nil);
 		lossstat.setFrame(nil);
@@ -114,13 +114,13 @@ function update()
 		lossmodifier.setFrame(nil);
 	else
 		limit.setFrame("fielddark", 7, 5, 7, 5);
-		
+
 		gainperiod.setFrame("fieldlight", 7, 5, 7, 5);
 		gaindice.onValueChanged(); -- basicdice sets the frame when the value changes.
 		gainstat.setFrame("fielddark", 7, 5, 7, 5);
 		gainstatmult.setFrame("fielddark", 7, 5, 7, 5);
 		gainmodifier.setFrame("fielddark", 7, 5, 7, 5);
-		
+
 		lossperiod.setFrame("fieldlight", 7, 5, 7, 5);
 		lossdice.onValueChanged(); -- basicdice sets the frame when the value changes.
 		lossstat.setFrame("fielddark", 7, 5, 7, 5);
