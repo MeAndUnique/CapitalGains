@@ -1,5 +1,5 @@
--- 
--- Please see the license.txt file included with this distribution for 
+--
+-- Please see the license.txt file included with this distribution for
 -- attribution and copyright information.
 --
 
@@ -26,14 +26,14 @@ function getRoll(rActor, rAction)
 	rRoll.aDice = rAction.dice or {};
 	rRoll.nMod = rAction.modifier or 0;
 	rRoll.bSelfTarget = true;
-	
+
 	-- Build description
 	rRoll.sDesc = "[RESOURCE";
 	if rAction.order and rAction.order > 1 then
 		rRoll.sDesc = rRoll.sDesc .. " #" .. rAction.order;
 	end
 	rRoll.sDesc = rRoll.sDesc .. "] " .. rAction.label;
-	
+
 	-- Add ability modifiers
 	if rAction.stat then
 		local sAbilityEffect = DataCommon.ability_ltos[rAction.stat];
@@ -47,7 +47,7 @@ end
 
 function performRoll(draginfo, rActor, rAction)
 	local rRoll = getRoll(rActor, rAction);
-	
+
 	ActionsManager.performAction(draginfo, rActor, rRoll);
 end
 
@@ -55,10 +55,10 @@ function modResource(rSource, rTarget, rRoll)
 	local aAddDesc = {};
 	local aAddDice = {};
 	local nAddMod = 0;
-	
+
 	if rSource then
 		local bEffects = false;
-		
+
 		-- Apply ability modifiers
 		for sAbility, sAbilityMult in rRoll.sDesc:gmatch("%[MOD: (%w+) %((%w+)%)%]") do
 			local nBonusStat, nBonusEffects = ActorManager5E.getAbilityEffectsBonus(rSource, DataCommon.ability_stol[sAbility]);
@@ -71,10 +71,10 @@ function modResource(rSource, rTarget, rRoll)
 				nAddMod = nAddMod + nBonusStat;
 			end
 		end
-		
+
 		-- If effects happened, then add note
 		if bEffects then
-			local sEffects = "";
+			local sEffects;
 			local sMod = StringManager.convertDiceToString(aAddDice, nAddMod, true);
 			if sMod ~= "" then
 				sEffects = "[" .. Interface.getString("effects_tag") .. " " .. sMod .. "]";
@@ -84,7 +84,7 @@ function modResource(rSource, rTarget, rRoll)
 			table.insert(aAddDesc, sEffects);
 		end
 	end
-	
+
 	if #aAddDesc > 0 then
 		rRoll.sDesc = rRoll.sDesc .. " " .. table.concat(aAddDesc, " ");
 	end
@@ -103,7 +103,7 @@ function onResource(rSource, rTarget, rRoll)
 	local rMessage = ActionsManager.createActionMessage(rSource, rRoll);
 	rMessage.text = string.gsub(rMessage.text, " %[MOD:[^]]*%]", "");
 	Comm.deliverChatMessage(rMessage);
-	
+
 	local nTotal = ActionsManager.total(rRoll);
 	notifyApplyResource(rSource, rTarget, rMessage.secret, nTotal, rRoll.sOperation, rRoll.sResource, rRoll.bAll);
 end
@@ -137,7 +137,7 @@ end
 function handleApplyResource(msgOOB)
 	local rSource = ActorManager.resolveActor(msgOOB.sSourceNode);
 	local rTarget = ActorManager.resolveActor(msgOOB.sTargetNode);
-	
+
 	local nTotal = tonumber(msgOOB.nTotal) or 0;
 	applyResource(rSource, rTarget, (tonumber(msgOOB.nSecret) == 1), nTotal, msgOOB.sOperation, msgOOB.sResource, tonumber(msgOOB.nAll) == 1);
 end
@@ -234,7 +234,7 @@ function applyResourceGain(rSource, rTarget, bSecret, nTotal, sOperation, sResou
 		end
 		msgLong.text = string.format(Interface.getString("resource_action_result_gain_long"), sResource, sGain, nRemaining);
 	end
-	
+
 	ActionsManager.outputResult(bSecret, rSource, nil, msgLong, msgShort);
 end
 
@@ -259,7 +259,7 @@ function applyResourceLoss(rSource, rTarget, bSecret, nTotal, sOperation, sResou
 		font = "msgfont",
 		icon = "coins"
 	};
-	
+
 	local sLoss;
 	if bAll then
 		sLoss = Interface.getString("resource_action_result_all");
@@ -327,7 +327,7 @@ end
 function notifyResourceHeal(rSource, rTarget, sEffectComp, bSecret, nSpend, sResource)
 	local msgOOB = {};
 	msgOOB.type = OOB_MSGTYPE_RESOURCE_HEAL;
-	
+
 	if bSecret then
 		msgOOB.nSecret = 1;
 	else
@@ -337,10 +337,10 @@ function notifyResourceHeal(rSource, rTarget, sEffectComp, bSecret, nSpend, sRes
 	msgOOB.nSpend = nSpend;
 	msgOOB.sResource = sResource;
 	msgOOB.sEffectComp = sEffectComp;
-	
+
 	msgOOB.sSourceNode = ActorManager.getCreatureNodeName(rSource);
 	msgOOB.sTargetNode = ActorManager.getCreatureNodeName(rTarget);
-	
+
 	local sTargetNodeType, nodeTarget = ActorManager.getTypeAndNode(rTarget);
 	if nodeTarget and (sTargetNodeType == "pc") then
 		if Session.IsHost then
@@ -373,7 +373,7 @@ function handleResourceHeal(msgOOB)
 	local rTarget = ActorManager.resolveActor(msgOOB.sTargetNode);
 	local rEffectComp = EffectManager5E.parseEffectComp(msgOOB.sEffectComp);
 	local bSecret = tonumber(msgOOB.nSecret) == 1;
-	
+
 	local rAction = {};
 	rAction.label = msgOOB.sResource;
 	rAction.clauses = {};
@@ -403,7 +403,7 @@ function handleResourceHeal(msgOOB)
 	if #aTargets == 0 and bSecret == false then
 		table.insert(aTargets, rSource);
 	end
-	
+
 	local rRoll = ActionHeal.getRoll(rSource, rAction);
 	if rRoll then
 		rRoll.bSecret = bSecret;
