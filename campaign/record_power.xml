@@ -5,25 +5,7 @@
 	</windowclass>
 
 	<windowclass name="power_item" merge="join">
-		<script>
-			function onInit()
-				if super and super.onInit then
-					super.onInit();
-				end
-				if not windowlist.isReadOnly() then
-					registerMenuItem(Interface.getString("power_menu_addresource"), "coins", 3, 6);
-				end
-			end
-			function onMenuSelection(selection, subselection)
-				if super and super.onMenuSelection then
-					super.onMenuSelection(selection, subselection);
-				end
-				if selection == 3 and subselection == 6 then
-					createAction("resource");
-					activatedetail.setValue(1);
-				end
-			end
-		</script>
+		<script file="campaign/scripts/power_item.lua" />
 	</windowclass>
 
 	<windowclass name="power_action_mini" merge="join">
