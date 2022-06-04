@@ -1,11 +1,11 @@
--- 
--- Please see the license.txt file included with this distribution for 
+--
+-- Please see the license.txt file included with this distribution for
 -- attribution and copyright information.
 --
 
 function onInit()
 	super.onInit();
-	
+
 	local node = getDatabaseNode();
 	DB.addHandler(DB.getPath(node, "resources.*.current"), "onUpdate", super.onAbilityChanged);
 end
