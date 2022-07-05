@@ -53,7 +53,7 @@ end
 
 function replaceResourceValue(s, sValue, bStatic, fGetValue)
 	local foundResources = {};
-	for sMatch in s:gmatch("(%[?" .. sValue .. "%([%+%-]?%d*%.?%d*%s?%*?%s?[^%]]+%)%]?)") do
+	for sMatch in s:gmatch("(%[?" .. sValue .. "%([%+%-]?%d*%.?%d*%s?%*?%s?[^%]%)]+%)%]?)") do
 		table.insert(foundResources, sMatch);
 	end
 

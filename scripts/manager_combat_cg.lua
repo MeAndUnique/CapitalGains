@@ -1,5 +1,5 @@
--- 
--- Please see the license.txt file included with this distribution for 
+--
+-- Please see the license.txt file included with this distribution for
 -- attribution and copyright information.
 --
 
@@ -11,14 +11,12 @@ function onInit()
 	if Session.IsHost then
 		resetHealthOriginal = CombatManager2.resetHealth;
 		CombatManager2.resetHealth = resetHealth;
-		
-		addPCOriginal = CombatManager.addPC;
-		CombatManager.addPC = addPC;
 
-		addNPCOriginal = CombatManager.addNPC;
-		CombatManager.addNPC = addNPC;
+		CombatRecordManager.setRecordTypePostAddCallback("charsheet", onPCPostAdd);
+		onNPCPostAdd_old = CombatRecordManager.getRecordTypePostAddCallback("npc");
+		CombatRecordManager.setRecordTypePostAddCallback("npc", onNPCPostAdd);
 
-		DB.addHandler(CombatManager.CT_COMBATANT_PATH, "onDelete", onCombatantDeleted);
+		CombatManager.setCustomDeleteCombatantHandler(onCombatantDeleted);
 	end
 end
 
@@ -31,15 +29,13 @@ function resetHealth(nodeCT, bLong)
 	ResourceManager.rest(ActorManager.resolveActor(nodeCT), bLong);
 end
 
-function addPC(nodePC)
-	ResourceManager.addResourceHandlers(nodePC);
-	addPCOriginal(nodePC);
+function onPCPostAdd(tCustom)
+	ResourceManager.addResourceHandlers(tCustom.nodeRecord);
 end
 
-function addNPC(sClass, nodeNPC, sName)
-	local nodeEntry = addNPCOriginal(sClass, nodeNPC, sName);
-	ResourceManager.addResourceHandlers(nodeEntry);
-	return nodeEntry;
+function onNPCPostAdd(tCustom)
+	addNPCOriginal(tCustom);
+	ResourceManager.addResourceHandlers(tCustom.nodeCT);
 end
 
 function onCombatantDeleted(nodeCombatant)
