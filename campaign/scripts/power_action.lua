@@ -58,7 +58,7 @@ function onDataChanged()
 end
 
 function onResourceChanged()
-	local sResource = PowerManagerCg.getPCPowerResourceActionText(getDatabaseNode());
+	local sResource = PowerManagerCG.getPCPowerResourceActionText(getDatabaseNode());
 	resourceview.setValue(sResource);
 end
 

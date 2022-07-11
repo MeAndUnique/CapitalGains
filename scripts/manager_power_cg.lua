@@ -1,5 +1,5 @@
--- 
--- Please see the license.txt file included with this distribution for 
+--
+-- Please see the license.txt file included with this distribution for
 -- attribution and copyright information.
 --
 
@@ -11,10 +11,10 @@ local resetIntriguePowersOriginal;
 function onInit()
 	getPCPowerActionOriginal = PowerManager.getPCPowerAction;
 	PowerManager.getPCPowerAction = getPCPowerAction;
-	
+
 	evalActionOriginal = PowerManager.evalAction;
 	PowerManager.evalAction = evalAction;
-	
+
 	performActionOriginal = PowerManager.performAction;
 	PowerManager.performAction = performAction;
 

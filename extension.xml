@@ -41,10 +41,11 @@ Icons made by wanicon www.flaticon.com
 
 	<base>
 		<script name="ActionResource" file="scripts/manager_action_resource.lua" />
-		<script name="CharManagerCg" file="scripts/manager_char_cg.lua" />
-		<script name="CombatManagerCg" file="scripts/manager_combat_cg.lua" />
-		<script name="EffectManagerCg" file="scripts/manager_effect_cg.lua" />
-		<script name="PowerManagerCg" file="scripts/manager_power_cg.lua" />
+		<script name="CharManagerCG" file="scripts/manager_char_cg.lua" />
+		<script name="CombatManagerCG" file="scripts/manager_combat_cg.lua" />
+		<script name="CombatRecordManagerCG" file="scripts/manager_combat_record_cg.lua" />
+		<script name="EffectManagerCG" file="scripts/manager_effect_cg.lua" />
+		<script name="PowerManagerCG" file="scripts/manager_power_cg.lua" />
 		<script name="ResourceManager" file="scripts/manager_resource.lua" />
 
 		<includefile source="campaign/record_char_actions.xml" />
