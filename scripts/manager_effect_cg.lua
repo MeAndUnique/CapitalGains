@@ -1,8 +1,9 @@
--- 
--- Please see the license.txt file included with this distribution for 
+--
+-- Please see the license.txt file included with this distribution for
 -- attribution and copyright information.
 --
 
+local addEffectOriginal;
 local parseEffectCompOriginal;
 local evalEffectOriginal;
 local getEffectsByTypeOriginal;
@@ -11,6 +12,9 @@ local rActiveActor;
 local bReplace = false;
 
 function onInit()
+	addEffectOriginal = EffectManager.addEffect;
+	EffectManager.addEffect = addEffect;
+
 	parseEffectCompOriginal = EffectManager5E.parseEffectComp;
 	EffectManager5E.parseEffectComp = parseEffectComp;
 
@@ -25,6 +29,19 @@ end
 
 function setActiveActor(rActor)
 	rActiveActor = rActor;
+end
+
+function addEffect(sUser, sIdentity, nodeCT, rNewEffect, bShowMsg)
+	local rActor = ActorManager.resolveActor(nodeCT);
+	if rActor then
+		setActiveActor(rActor);
+		bReplace = true;
+		rNewEffect.sName = replaceResourceValue(rNewEffect.sName, "CURRENT", bReplace, ResourceManager.getCurrentResource);
+		rNewEffect.sName = replaceResourceValue(rNewEffect.sName, "SPENT", bReplace, ResourceManager.getSpentResource);
+		bReplace = false;
+		setActiveActor(nil);
+	end
+	addEffectOriginal(sUser, sIdentity, nodeCT, rNewEffect, bShowMsg);
 end
 
 function parseEffectComp(s)
@@ -65,7 +82,7 @@ function replaceResourceValue(s, sValue, bStatic, fGetValue)
 	end
 
 	for _,sMatch in ipairs(foundResources) do
-		local sSign, sMultiplier, sResource = sMatch:match("^" .. sPrefix .. sValue .. "%(([%+%-]?)(%d*%.?%d*)%s?%*?%s?([^%]]+)%)" .. sPostfix .. "$");
+		local sSign, sMultiplier, sResource = sMatch:match("^" .. sPrefix .. sValue .. "%(([%+%-]?)(%d*%.?%d*)%s?%*?%s?([^%]%)]+)%)" .. sPostfix .. "$");
 		if sResource then
 			local nValue = fGetValue(rActiveActor, StringManager.trim(sResource));
 			if nValue then
