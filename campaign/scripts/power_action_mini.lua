@@ -58,7 +58,7 @@ function updateViews()
 end
 
 function onResourceChanged()
-	local sResource = PowerManagerCg.getPCPowerResourceActionText(getDatabaseNode());
+	local sResource = PowerManagerCG.getPCPowerResourceActionText(getDatabaseNode());
 	button.setTooltipText("RESOURCE: " .. sResource);
 end
 

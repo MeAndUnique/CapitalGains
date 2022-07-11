@@ -272,7 +272,7 @@ function applyResourceLoss(rSource, rTarget, bSecret, nTotal, sOperation, sResou
 end
 
 function handleSpendEffects(rSource, rTarget, bSecret, nSpend, sResource)
-	EffectManagerCg.setActiveActor(rSource);
+	EffectManagerCG.setActiveActor(rSource);
 	local nodeCT = ActorManager.getCTNode(rSource);
 	for _,nodeEffect in pairs(DB.getChildren(nodeCT, "effects")) do
 		-- Check active
@@ -321,7 +321,7 @@ function handleSpendEffects(rSource, rTarget, bSecret, nSpend, sResource)
 			end
 		end  -- END ACTIVE CHECK
 	end  -- END EFFECT LOOP
-	EffectManagerCg.setActiveActor(nil);
+	EffectManagerCG.setActiveActor(nil);
 end
 
 function notifyResourceHeal(rSource, rTarget, sEffectComp, bSecret, nSpend, sResource)
