@@ -25,6 +25,7 @@ function onInit()
 	EffectManager5E.getEffectsByType = getEffectsByType;
 
 	CombatManager.setCustomInitChange(handleInitChange);
+	CombatManager.setCustomTurnStart(onTurnStart);
 end
 
 function setActiveActor(rActor)
@@ -97,7 +98,7 @@ function replaceResourceValue(s, sValue, bStatic, fGetValue)
 	return s;
 end
 
-function handleInitChange(nodeOldCT, nodeNewCT)
+function onTurnStart(nodeNewCT)
 	local aEntries = CombatManager.getSortedCombatantList();
 	for i = 1,#aEntries do
 		local nodeActor = aEntries[i];
@@ -153,7 +154,7 @@ function processGrant(rSource, rEffectComp)
 		rAction.modifier = rEffectComp.mod;
 		rAction.dice = rEffectComp.dice;
 
-		rRoll = ActionResource.getRoll(rSource, rAction);
+		local rRoll = ActionResource.getRoll(rSource, rAction);
 		if rRoll then
 			ActionsManager.performMultiAction(nil, rSource, rRoll.sType, {rRoll});
 		end
