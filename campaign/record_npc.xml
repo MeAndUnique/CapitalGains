@@ -3,7 +3,7 @@
 	<windowclass name="npc_combat" merge="join">
 		<script file="campaign/scripts/npc_main.lua" />
 		<sheetdata>
-			<header_column name="header_resources" insertbefore="header_traits">
+			<header_column name="header_resources" insertbefore="traits_header">
 				<static textres="power_header_resources"/>
 			</header_column>
 			<button_iedit name="resources_iedit">
@@ -14,7 +14,7 @@
 				<anchored to="resources_iedit" position="lefthigh" offset="5,0" />
 				<target>resources</target>
 			</button_iadd>
-			<windowlist name="resources" insertbefore="header_traits">
+			<windowlist name="resources" insertbefore="traits_header">
 				<script>
 					function addEntry(bFocus)
 						local w = createWindow();
@@ -23,7 +23,8 @@
 						end
 						return w;
 					end
-					function update(bEditMode)
+					function update()
+						local bEditMode = window.resources_iedit.getValue() == 1;
 						for _,w in pairs(getWindows()) do
 							w.idelete.setVisibility(bEditMode);
 						end
