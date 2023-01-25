@@ -1,5 +1,5 @@
--- 
--- Please see the license.txt file included with this distribution for 
+--
+-- Please see the license.txt file included with this distribution for
 -- attribution and copyright information.
 --
 
@@ -25,7 +25,7 @@ function update()
 			resources_iedit.setVisible(false);
 			resources_iadd.setVisible(false);
 		end
-		
+
 		local bShow = (resources.getWindowCount() ~= 0);
 		header_resources.setVisible(bShow);
 		resources.setVisible(bShow);

@@ -54,7 +54,7 @@ end
 function getPCPowerResourceActionText(nodeAction)
 	local text = "";
 	local rAction, rActor = PowerManager.getPCPowerAction(nodeAction);
-	if rAction then
+	if rAction and rAction.type == "resource" then
 		PowerManager.evalAction(rActor, nodeAction.getChild("..."), rAction);
 
 		local sValue;
