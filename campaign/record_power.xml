@@ -13,7 +13,7 @@
 	</windowclass>
 
 	<windowclass name="power_action" merge="join">
-		<script file="campaign/scripts/power_action.lua" />
+		<script file="campaign/scripts/power_action_resource.lua" />
 		<sheetdata>
 			<!-- RESOURCE -->
 			<button_poweraction name="resourcebutton">
