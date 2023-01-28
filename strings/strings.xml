@@ -15,6 +15,7 @@
 
 	<string name="power_menu_addresource">Add Resource</string>
 	<string name="power_label_resource">Rsrc</string>
+	<string name="power_tooltip_resource">RESOURCE</string>
 
 	<string name="power_title_resource">Spell/Ability Resource</string>
 	<string name="power_header_operation_mode">RESOURCE/OPERATION</string>

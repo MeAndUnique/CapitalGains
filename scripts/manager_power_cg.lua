@@ -6,6 +6,9 @@
 local getPCPowerActionOriginal;
 local evalActionOriginal;
 local performActionOriginal;
+local getActionButtonIconsOriginal;
+local getActionTextOriginal;
+local getActionTooltipOriginal;
 local resetIntriguePowersOriginal;
 
 function onInit()
@@ -18,10 +21,28 @@ function onInit()
 	performActionOriginal = PowerManager.performAction;
 	PowerManager.performAction = performAction;
 
+	getActionButtonIconsOriginal = PowerManager5E.getActionButtonIcons;
+	PowerManager5E.getActionButtonIcons = getActionButtonIcons;
+
+	getActionTextOriginal = PowerManager5E.getActionText;
+	PowerManager5E.getActionText = getActionText;
+
+	getActionTooltipOriginal = PowerManager5E.getActionTooltip;
+	PowerManager5E.getActionTooltip = getActionTooltip;
+
 	if PowerManagerKw then
 		resetIntriguePowersOriginal = PowerManagerKw.resetIntriguePowers;
 		PowerManagerKw.resetIntriguePowers = resetIntriguePowers;
 	end
+
+	PowerActionManagerCore.registerActionTypes({ "resource" });
+	local tPowerActionHandlers = {
+		fnGetButtonIcons = getActionButtonIcons,
+		fnGetText = getActionText,
+		fnGetTooltip = getActionTooltip,
+		fnPerform = PowerManager5E.performAction,
+	};
+	PowerActionManagerCore.registerActionHandlers(tPowerActionHandlers);
 end
 
 function getPCPowerAction(nodeAction, sSubRoll)
@@ -128,6 +149,31 @@ function performAction(draginfo, rActor, rAction, nodePower)
 	else
 		return performActionOriginal(draginfo, rActor, rAction, nodePower);
 	end
+end
+
+function getActionButtonIcons(node, tData)
+	local sType = DB.getValue(node, "type", "");
+	if sType == "resource" then
+		return "button_action_resource", "button_action_resource_down";
+	end
+	return getActionButtonIconsOriginal(node, tData);
+end
+
+function getActionText(node, tData)
+	local sType = DB.getValue(node, "type", "");
+	if sType == "resource" then
+		return getPCPowerResourceActionText(node);
+	end
+	return getActionTextOriginal(node, tData);
+end
+
+function getActionTooltip(node, tData)
+	local sType = DB.getValue(node, "type", "");
+	if sType == "resource" then
+		local sResource = getPCPowerResourceActionText(node);
+		return string.format("%s: %s", Interface.getString("power_tooltip_resource"), sResource);
+	end
+	return getActionTooltipOriginal(node, tData);
 end
 
 function resetIntriguePowers(nodeCaster)

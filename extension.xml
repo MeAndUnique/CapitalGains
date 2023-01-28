@@ -51,6 +51,7 @@ Icons made by wanicon www.flaticon.com
 		<includefile source="campaign/record_char_actions.xml" />
 		<includefile source="campaign/record_npc.xml" />
 		<includefile source="campaign/record_power.xml" />
+		<includefile source="campaign/record_power_roll.xml" />
 		<includefile source="campaign/record_resource.xml" />
 		<includefile source="graphics/graphics_icons.xml" />
 		<includefile source="strings/strings.xml" />
