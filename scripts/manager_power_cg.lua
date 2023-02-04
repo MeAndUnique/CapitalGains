@@ -6,9 +6,8 @@
 local getPCPowerActionOriginal;
 local evalActionOriginal;
 local performActionOriginal;
-local getActionButtonIconsOriginal;
-local getActionTextOriginal;
-local getActionTooltipOriginal;
+local registerDefaultPowerMenuOriginal;
+local onDefaultPowerMenuSelectionOriginal;
 local resetIntriguePowersOriginal;
 
 function onInit()
@@ -21,28 +20,24 @@ function onInit()
 	performActionOriginal = PowerManager.performAction;
 	PowerManager.performAction = performAction;
 
-	getActionButtonIconsOriginal = PowerManager5E.getActionButtonIcons;
-	PowerManager5E.getActionButtonIcons = getActionButtonIcons;
+	registerDefaultPowerMenuOriginal = PowerManagerCore.registerDefaultPowerMenu;
+	PowerManagerCore.registerDefaultPowerMenu = registerDefaultPowerMenu;
 
-	getActionTextOriginal = PowerManager5E.getActionText;
-	PowerManager5E.getActionText = getActionText;
-
-	getActionTooltipOriginal = PowerManager5E.getActionTooltip;
-	PowerManager5E.getActionTooltip = getActionTooltip;
+	onDefaultPowerMenuSelectionOriginal = PowerManagerCore.onDefaultPowerMenuSelection;
+	PowerManagerCore.onDefaultPowerMenuSelection = onDefaultPowerMenuSelection;
 
 	if PowerManagerKw then
 		resetIntriguePowersOriginal = PowerManagerKw.resetIntriguePowers;
 		PowerManagerKw.resetIntriguePowers = resetIntriguePowers;
 	end
 
-	PowerActionManagerCore.registerActionTypes({ "resource" });
-	local tPowerActionHandlers = {
+	local tResourceActionHandlers = {
 		fnGetButtonIcons = getActionButtonIcons,
 		fnGetText = getActionText,
 		fnGetTooltip = getActionTooltip,
 		fnPerform = PowerManager5E.performAction,
 	};
-	PowerActionManagerCore.registerActionHandlers(tPowerActionHandlers);
+	PowerActionManagerCore.registerActionType("resource", tResourceActionHandlers);
 end
 
 function getPCPowerAction(nodeAction, sSubRoll)
@@ -142,7 +137,7 @@ function performAction(draginfo, rActor, rAction, nodePower)
 
 	if rAction.type == "resource" then
 		evalAction(rActor, nodePower, rAction);
-		rRoll = ActionResource.getRoll(rActor, rAction);
+		local rRoll = ActionResource.getRoll(rActor, rAction);
 		if rRoll then
 			ActionsManager.performMultiAction(draginfo, rActor, rRoll.sType, {rRoll});
 		end
@@ -151,29 +146,54 @@ function performAction(draginfo, rActor, rAction, nodePower)
 	end
 end
 
+function registerDefaultPowerMenu(w)
+	registerDefaultPowerMenuOriginal(w);
+
+	if w.windowlist.isReadOnly() then
+		return;
+	end
+
+	local aTypes = PowerActionManagerCore.getSortedActionTypes();
+	if #aTypes >= 6 then
+		w.registerMenuItem(Interface.getString("power_menu_extraactions"), "pointer", 3, 1);
+	end
+	for index = 6, math.min(#aTypes, 9) do
+		local sType = aTypes[index];
+		w.registerMenuItem(Interface.getString("power_menu_action_add_" .. sType), "radial_power_action_" .. sType, 3, 1, index - 5);
+	end
+end
+
+function onDefaultPowerMenuSelection(w, selection, subselection, tertiaryselection)
+	onDefaultPowerMenuSelectionOriginal(w, selection, subselection);
+	if selection == 3 and subselection == 1 then
+		local tTypes = PowerActionManagerCore.getSortedActionTypes();
+		local sType = tTypes[tertiaryselection + 5];
+		if sType then
+			PowerManagerCore.createPowerAction(w, sType);
+		end
+	end
+end
+
 function getActionButtonIcons(node, tData)
-	local sType = DB.getValue(node, "type", "");
-	if sType == "resource" then
+	if tData.sType == "resource" then
 		return "button_action_resource", "button_action_resource_down";
 	end
-	return getActionButtonIconsOriginal(node, tData);
+	return "", "";
 end
 
 function getActionText(node, tData)
-	local sType = DB.getValue(node, "type", "");
-	if sType == "resource" then
+	if tData.sType == "resource" then
 		return getPCPowerResourceActionText(node);
 	end
-	return getActionTextOriginal(node, tData);
+	return "";
 end
 
 function getActionTooltip(node, tData)
-	local sType = DB.getValue(node, "type", "");
-	if sType == "resource" then
+	if tData.sType == "resource" then
 		local sResource = getPCPowerResourceActionText(node);
 		return string.format("%s: %s", Interface.getString("power_tooltip_resource"), sResource);
 	end
-	return getActionTooltipOriginal(node, tData);
+	return "";
 end
 
 function resetIntriguePowers(nodeCaster)

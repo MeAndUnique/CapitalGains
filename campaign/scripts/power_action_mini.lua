@@ -11,13 +11,7 @@ local sRegisteredName;
 
 function onInit()
 	local nodeAction = getDatabaseNode();
-	rActor = ActorManager.resolveActor(nodeAction.getChild("....."));
-
-	updateDisplayOriginal = super.updateDisplay;
-	super.updateDisplay = updateDisplay;
-
-	updateViewsOriginal = super.updateViews;
-	super.updateViews = updateViews;
+	rActor = ActorManager.resolveActor(PowerManagerCore.getPowerActorNode(nodeAction.getChild("...")));
 
 	DB.addHandler(DB.getPath(nodeAction, "resource"), "onUpdate", onResourceNameChanged);
 	addSpecialHandlers();
@@ -35,26 +29,6 @@ function onClose()
 	local nodeAction = getDatabaseNode();
 	DB.removeHandler(DB.getPath(nodeAction, "resource"), "onUpdate", onResourceNameChanged);
 	removeSpecialHandlers();
-end
-
-function updateDisplay()
-	updateDisplayOriginal();
-
-	local node = getDatabaseNode();
-	local sType = DB.getValue(node, "type", "");
-
-	if sType == "resource" then
-		button.setIcons("button_action_modifier", "button_action_modifier_down");
-	end
-end
-
-function updateViews()
-	updateViewsOriginal();
-
-	local sType = DB.getValue(getDatabaseNode(), "type", "");
-	if sType == "resource" then
-		onResourceChanged();
-	end
 end
 
 function onResourceChanged()

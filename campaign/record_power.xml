@@ -4,10 +4,6 @@
 		<script file="campaign/scripts/power_page.lua" />
 	</windowclass>
 
-	<windowclass name="power_item" merge="join">
-		<script file="campaign/scripts/power_item.lua" />
-	</windowclass>
-
 	<windowclass name="power_action_mini" merge="join">
 		<script file="campaign/scripts/power_action_mini.lua" />
 	</windowclass>
