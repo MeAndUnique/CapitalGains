@@ -8,8 +8,10 @@
 <root>
 	<icon name="CapitalGains" file="graphics/icons/CapitalGains.png" />
 
+	<icon name="char_resource" file="graphics/icons/char_inventory.png" />
+
+	<icon name="radial_power_action_resource" file="graphics/icons/coins.png" />
 	<icon name="button_action_resource" file="graphics/buttons/button_action_modifier.png" />
 	<icon name="button_action_resource_down" file="graphics/buttons/button_action_modifier_down.png" />
-	
-	<icon name="radial_power_action_resource" file="graphics/icons/coins.png" />
+	<icon name="roll_resource" file="graphics/icons/coins.png" />	
 </root>

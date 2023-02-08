@@ -159,7 +159,7 @@ function applyResourceSpend(rSource, rTarget, bSecret, nTotal, sOperation, sReso
 	if not nOverflow then
 		local msgMissing = {
 			font = "msgfont",
-			icon = "coins",
+			icon = "roll_resource",
 			text = string.format(Interface.getString("resource_action_result_missing"), sResource)
 		};
 		ActionsManager.outputResult(bSecret, rSource, nil, msgMissing, msgMissing);
@@ -168,12 +168,12 @@ function applyResourceSpend(rSource, rTarget, bSecret, nTotal, sOperation, sReso
 
 	local msgShort = {
 		font = "msgfont",
-		icon = "coins",
+		icon = "roll_resource",
 		text = string.format(Interface.getString("resource_action_result_spend_short"), sResource)
 	};
 	local msgLong = {
 		font = "msgfont",
-		icon = "coins"
+		icon = "roll_resource"
 	};
 
 	local bSuccess = false;
@@ -206,7 +206,7 @@ function applyResourceGain(rSource, rTarget, bSecret, nTotal, sOperation, sResou
 	if not nOverflow then
 		local msgMissing = {
 			font = "msgfont",
-			icon = "coins",
+			icon = "roll_resource",
 			text = string.format(Interface.getString("resource_action_result_missing"), sResource)
 		};
 		ActionsManager.outputResult(bSecret, rSource, nil, msgMissing, msgMissing);
@@ -215,12 +215,12 @@ function applyResourceGain(rSource, rTarget, bSecret, nTotal, sOperation, sResou
 
 	local msgShort = {
 		font = "msgfont",
-		icon = "coins",
+		icon = "coinroll_resources",
 		text = string.format(Interface.getString("resource_action_result_gain_short"), sResource)
 	};
 	local msgLong = {
 		font = "msgfont",
-		icon = "coins"
+		icon = "roll_resource"
 	};
 
 	if bAll and nOverflow < 0 then
@@ -243,7 +243,7 @@ function applyResourceLoss(rSource, rTarget, bSecret, nTotal, sOperation, sResou
 	if not nOverflow then
 		local msgMissing = {
 			font = "msgfont",
-			icon = "coins",
+			icon = "roll_resource",
 			text = string.format(Interface.getString("resource_action_result_missing"), sResource)
 		};
 		ActionsManager.outputResult(bSecret, rSource, nil, msgMissing, msgMissing);
@@ -252,12 +252,12 @@ function applyResourceLoss(rSource, rTarget, bSecret, nTotal, sOperation, sResou
 
 	local msgShort = {
 		font = "msgfont",
-		icon = "coins",
+		icon = "roll_resource",
 		text = string.format(Interface.getString("resource_action_result_loss_short"), sResource)
 	};
 	local msgLong = {
 		font = "msgfont",
-		icon = "coins"
+		icon = "roll_resource"
 	};
 
 	local sLoss;

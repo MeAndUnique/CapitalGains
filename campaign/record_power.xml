@@ -14,7 +14,7 @@
 		<sheetdata>
 			<button_poweraction name="resourcebutton">
 				<anchored position="insidetopleft" offset="2,2" />
-				<icon normal="button_action_modifier" pressed="button_action_modifier_down" />
+				<icon normal="button_action_resource" pressed="button_action_resource_down" />
 			</button_poweraction>
 			<label name="resourcelabel">
 				<anchored to="resourcebutton" position="righthigh" offset="5,0" width="35" />
