@@ -159,7 +159,7 @@ function applyResourceSpend(rSource, rTarget, bSecret, nTotal, sOperation, sReso
 	if not nOverflow then
 		local msgMissing = {
 			font = "msgfont",
-			icon = "roll_resource",
+			icon = "roll_resource_missing",
 			text = string.format(Interface.getString("resource_action_result_missing"), sResource)
 		};
 		ActionsManager.outputResult(bSecret, rSource, nil, msgMissing, msgMissing);
@@ -179,6 +179,7 @@ function applyResourceSpend(rSource, rTarget, bSecret, nTotal, sOperation, sReso
 	local bSuccess = false;
 	if not bAll and nOverflow > 0 then
 		msgLong.text = string.format(Interface.getString("resource_action_result_insufficient"), sResource, nTotal, nRemaining);
+		msgLong.icon = "roll_resource_missing";
 	else
 		bSuccess = true;
 		local sSpend;
@@ -206,7 +207,7 @@ function applyResourceGain(rSource, rTarget, bSecret, nTotal, sOperation, sResou
 	if not nOverflow then
 		local msgMissing = {
 			font = "msgfont",
-			icon = "roll_resource",
+			icon = "roll_resource_missing",
 			text = string.format(Interface.getString("resource_action_result_missing"), sResource)
 		};
 		ActionsManager.outputResult(bSecret, rSource, nil, msgMissing, msgMissing);
@@ -215,12 +216,12 @@ function applyResourceGain(rSource, rTarget, bSecret, nTotal, sOperation, sResou
 
 	local msgShort = {
 		font = "msgfont",
-		icon = "coinroll_resources",
+		icon = "roll_resource_gain",
 		text = string.format(Interface.getString("resource_action_result_gain_short"), sResource)
 	};
 	local msgLong = {
 		font = "msgfont",
-		icon = "roll_resource"
+		icon = "roll_resource_gain"
 	};
 
 	if bAll and nOverflow < 0 then
@@ -243,7 +244,7 @@ function applyResourceLoss(rSource, rTarget, bSecret, nTotal, sOperation, sResou
 	if not nOverflow then
 		local msgMissing = {
 			font = "msgfont",
-			icon = "roll_resource",
+			icon = "roll_resource_missing",
 			text = string.format(Interface.getString("resource_action_result_missing"), sResource)
 		};
 		ActionsManager.outputResult(bSecret, rSource, nil, msgMissing, msgMissing);
