@@ -217,7 +217,8 @@ function registerDefaultPowerMenu(w)
 
 	local aSubMenus = { 3 };
 	local tTypes = PowerActionManagerCore.getSortedActionTypes();
-	for nIndex = 1, #tTypes do
+	local nTypes = #tTypes;
+	for nIndex = 1, tTypes do
 		local sType = tTypes[nIndex];
 		local nDepth = #aSubMenus - 1;
 		local nPosition = nIndex - (nDepth * 6); -- Six actions per submenu.
@@ -226,7 +227,7 @@ function registerDefaultPowerMenu(w)
 			nPosition = nPosition + 1;
 		end
 		if nPosition == 9 then
-			if nIndex == #tTypes then
+			if nIndex == tTypes then
 				-- Add the final action in the top slot.
 				nPosition = 1;
 			else
@@ -257,6 +258,15 @@ function onDefaultPowerMenuSelection(w, selection, ...)
 		local tTypes = PowerActionManagerCore.getSortedActionTypes();
 		-- need a formula that maps selection 2 to index 1 and selection 1 to index 7, etc
 		-- then account for the skip (or maybe account for skip first?, but then what about 1)
+		local nSubSelections = #aSubSelections;
+		local nIndexOffset = 6 * (nSubSelections - 1);
+		local nFinalSelection = aSubSelections[nSubSelections];
+		nFinalSelection = ((nFinalSelection + 6) % 8) +1;
+		if nFinalSelection > getDefaultPowerMenuSkipIndex(nActionIndex) then -- TODO action index?
+			nFinalSelection = nFinalSelection - 1;
+		end
+		local nActionIndex = 
+
 		local nBaseIndex = PowerManagerCore.getDefaultPowerMenuBaseIndex(tTypes);
 		local nActionIndex = ((subselection - nBaseIndex) % 8) + 1;
 		local sType = tTypes[nActionIndex];
