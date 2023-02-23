@@ -13,8 +13,10 @@
 	<string name="resource_loss_period_label">Lose on</string>
 	<string name="resource_sharing_label">Share with</string>
 
-	<string name="power_menu_addresource">Add Resource</string>
+	<string name="power_menu_extraactions">More Actions</string>
+	<string name="power_menu_action_add_resource">Add Resource</string>
 	<string name="power_label_resource">Rsrc</string>
+	<string name="power_tooltip_resource">RESOURCE</string>
 
 	<string name="power_title_resource">Spell/Ability Resource</string>
 	<string name="power_header_operation_mode">RESOURCE/OPERATION</string>
