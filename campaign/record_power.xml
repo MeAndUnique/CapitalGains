@@ -4,25 +4,21 @@
 		<script file="campaign/scripts/power_page.lua" />
 	</windowclass>
 
-	<windowclass name="power_item" merge="join">
-		<script file="campaign/scripts/power_item.lua" />
-	</windowclass>
-
 	<windowclass name="power_action_mini" merge="join">
 		<script file="campaign/scripts/power_action_mini.lua" />
 	</windowclass>
 
-	<windowclass name="power_action" merge="join">
-		<script file="campaign/scripts/power_action.lua" />
+	<windowclass name="power_action_resource">
+		<margins control="0,0,0,2" />
+		<script file="campaign/scripts/power_action_resource.lua" />
 		<sheetdata>
-			<!-- RESOURCE -->
 			<button_poweraction name="resourcebutton">
 				<anchored position="insidetopleft" offset="2,2" />
-				<icon normal="button_action_modifier" pressed="button_action_modifier_down" />
+				<icon normal="button_action_resource" pressed="button_action_resource_down" />
 			</button_poweraction>
 			<label name="resourcelabel">
 				<anchored to="resourcebutton" position="righthigh" offset="5,0" width="35" />
-				<static textres="power_label_resource" />
+				<static textres="power_label_resource" />	
 			</label>
 			<string_poweractionview name="resourceview">
 				<anchored to="resourcelabel" position="righthigh" offset="20,0">
@@ -44,14 +40,11 @@
 								end
 								DB.setValue(node, "modifier", "number", nModifier);
 							end
+							return true;
 						end
-						return true;
 					end
 				</script>
 			</string_poweractionview>
-			<button_poweractioneditor name="resourcedetail">
-				<editor>power_resource_editor</editor>
-			</button_poweractioneditor>
 		</sheetdata>
 	</windowclass>
 </root>

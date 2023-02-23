@@ -40,7 +40,7 @@
 					<left offset="15" />
 					<right offset="-10" />
 				</anchored>
-				<icons>char_treasure</icons>
+				<icons>char_resource</icons>
 				<static textres="power_header_resources" />
 				<script>
 					function onClickDown()

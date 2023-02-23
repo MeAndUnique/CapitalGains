@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+	<windowclass name="power_action_editor_resource">
+		<script file="campaign/scripts/power_resource_editor.lua" />
+		<sheetdata>
+			<anchor_column name="columnanchor" />
+			
+			<label_column name="name_label">
+				<static textres="power_label_name" />
+			</label_column>
+			<stringc_column name="name" />
+
+			<header_column name="header_operation_mode">
+				<static textres="power_header_operation_mode" />
+				<center />
+			</header_column>
+			<basicstring name="resource">
+				<anchored width="80" height="20">
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="7" />
+					<left offset="20" />
+				</anchored>
+			</basicstring>
+			<button_stringcycler name="operation">
+				<anchored to="resource" position="righthigh" offset="10,0" width="80" height="20" />
+				<parameters>
+					<defaultlabelres>power_operation_spend</defaultlabelres>
+					<labelsres>power_operation_gain</labelsres>
+					<values>gain</values>
+				</parameters>
+			</button_stringcycler>
+			<label name="label_all">
+				<anchored to="operation" position="righthigh" offset="15,0" height="20" />
+				<static textres="power_resource_all_label" />
+			</label>
+			<button_checkbox name="all">
+				<anchored to="label_all" position="righthigh" offset="0,0" width="20" height="20" />
+			</button_checkbox>
+			
+			<header_column name="header_value">
+				<center />
+			</header_column>
+			<genericcontrol name="valueanchor">
+				<anchored width="0" height="0">
+					<left offset="20" />
+					<top parent="header_value" anchor="bottom" offset="5" />
+				</anchored>
+			</genericcontrol>
+
+			<basicdice name="dice">
+				<anchored to="valueanchor" width="60" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="0" />
+				</anchored>
+			</basicdice>
+			<label name="label_plus">
+				<anchored to="valueanchor" width="10">
+					<top />
+					<left anchor="right" relation="relative" offset="5" />
+				</anchored>
+				<static>+</static>
+			</label>
+			<basicnumber name="statmult">
+				<anchored to="valueanchor" width="20" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="3" />
+				</anchored>
+				<default>1</default>
+				<min>0</min>
+				<hideonvalue>1</hideonvalue>
+				<tooltip textres="power_tooltip_statmult" />
+			</basicnumber>
+			<label name="label_statmultx">
+				<anchored to="valueanchor" width="10">
+					<top />
+					<left anchor="right" relation="relative" offset="4" />
+				</anchored>
+				<static>x</static>
+				<center />
+			</label>
+			<cycler_power name="stat">
+				<anchored to="valueanchor" width="30" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="3" />
+				</anchored>
+			</cycler_power>
+			<label name="label_plus2">
+				<anchored to="valueanchor" width="10">
+					<top />
+					<left anchor="right" relation="relative" offset="5" />
+				</anchored>
+				<static>+</static>
+			</label>
+			
+			<basicnumber name="modifier">
+				<anchored to="valueanchor" width="35" height="20">
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="7" />
+					<left anchor="right" relation="relative" offset="2" />
+				</anchored>
+			</basicnumber>
+			<label name="label_variable">
+				<anchored to="modifier" position="righthigh" offset="15,0" height="20" />
+				<static textres="power_resource_range_label" />
+			</label>
+			<button_checkbox name="variable">
+				<anchored to="label_variable" position="righthigh" offset="0,0" width="20" height="20" />
+			</button_checkbox>
+			
+			<header_column name="header_range">
+				<static textres="power_header_range_value" />
+				<center />
+			</header_column>
+			<genericcontrol name="rangeanchor">
+				<anchored width="0" height="0">
+					<left />
+					<top parent="header_range" anchor="bottom" offset="5" />
+				</anchored>
+			</genericcontrol>
+			<basicnumber name="min">
+				<anchored to="rangeanchor" width="35" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="20" />
+				</anchored>
+				<defaultvalue>1</defaultvalue>
+				<min>1</min>
+			</basicnumber>
+			<basicnumber name="max">
+				<anchored to="rangeanchor" width="35" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="20" />
+				</anchored>
+				<min>0</min>
+				<hideonvalue>0</hideonvalue>
+			</basicnumber>
+			<basicnumber name="interval">
+				<anchored to="rangeanchor" width="35" height="20">
+					<top />
+					<left anchor="right" relation="relative" offset="20" />
+				</anchored>
+				<defaultvalue>1</defaultvalue>
+				<min>1</min>
+			</basicnumber>
+		</sheetdata>
+	</windowclass>
+</root>
