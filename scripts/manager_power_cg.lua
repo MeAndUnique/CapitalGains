@@ -6,8 +6,9 @@
 local getPCPowerActionOriginal;
 local evalActionOriginal;
 local performActionOriginal;
+local registerDefaultPowerMenuOriginal;
+local onDefaultPowerMenuSelectionOriginal;
 local resetIntriguePowersOriginal;
-local _tAllTypeData = {};
 
 function onInit()
 	getPCPowerActionOriginal = PowerManager.getPCPowerAction;
@@ -19,11 +20,15 @@ function onInit()
 	performActionOriginal = PowerManager.performAction;
 	PowerManager.performAction = performAction;
 
-	-- The baseline wholly can't handle more than 7 types of action, and so must be replaced.
-	PowerActionManagerCore._tAllTypeData = _tAllTypeData;
-	PowerActionManagerCore.calcNextActionTypeOrder = calcNextActionTypeOrder;
+	registerDefaultPowerMenuOriginal = PowerManagerCore.registerDefaultPowerMenu;
 	PowerManagerCore.registerDefaultPowerMenu = registerDefaultPowerMenu;
+
+	onDefaultPowerMenuSelectionOriginal = PowerManagerCore.onDefaultPowerMenuSelection;
 	PowerManagerCore.onDefaultPowerMenuSelection = onDefaultPowerMenuSelection;
+
+	-- The baseline neither accounts for wanting to set a high order so an action goes after unspecified actions
+	-- nor exposes sufficient functionality to add that feature without whole replacement.
+	PowerActionManagerCore.calcNextActionTypeOrder = calcNextActionTypeOrder;
 
 	if PowerManagerKw then
 		resetIntriguePowersOriginal = PowerManagerKw.resetIntriguePowers;
@@ -150,78 +155,58 @@ function calcNextActionTypeOrder()
 end
 
 function registerDefaultPowerMenu(w)
-	w.registerMenuItem(Interface.getString("list_menu_deleteitem"), "delete", 6);
-	w.registerMenuItem(Interface.getString("list_menu_deleteconfirm"), "delete", 6, 7);
-
+	registerDefaultPowerMenuOriginal(w);
 	local aSubMenus = { 3 };
 	local aTypes = PowerActionManagerCore.getSortedActionTypes();
 	local nTypes = #aTypes;
-	if nTypes > 0 then
-		w.registerMenuItem(Interface.getString("power_menu_action_add"), "pointer", 3);
-	end
-	for nIndex = 1, nTypes do
-		local sType = aTypes[nIndex];
-		local nDepth = #aSubMenus - 1;
-		local nPosition = nIndex - (nDepth * 6); -- Six actions per submenu.
-		nPosition = nPosition + 1; -- Account for initial offset in each menu.
-		if nPosition >= getDefaultPowerMenuSkipPosition(nIndex) then
-			nPosition = nPosition + 1;
-		end
-		if nPosition == 9 then
-			if nIndex == aTypes then
-				-- Add the final action in the top slot.
-				nPosition = 1;
-			else
-				-- Add another layer and start at the start.
-				table.insert(aSubMenus, 1);
+	if nTypes > 7 then
+		w.registerMenuItem(Interface.getString("power_menu_extraactions"), "pointer", 3, 6);
+		local nDepth = 1;
+		for nIndex = 7, nTypes do
+			local sType = aTypes[nIndex];
+			local nDepth = #aSubMenus - 1;
+			local nSubIndex = nIndex - (nDepth * 6); -- Six actions per submenu.
+			local nPosition = resolveDefaultPowerMenuPosition(nDepth, nSubIndex);
+			if (nSubIndex == 7) and (nIndex ~= nTypes) then
+				table.insert(aSubMenus, nPosition);
 				w.registerMenuItem(Interface.getString("power_menu_extraactions"), "pointer", unpack(aSubMenus));
-				nPosition = 2;
+				nDepth = nDepth + 1;
+				nSubIndex = nSubIndex - 6;
+				nPosition = resolveDefaultPowerMenuPosition(nDepth, nSubIndex);
 			end
+			table.insert(aSubMenus, nPosition);
+			w.registerMenuItem(Interface.getString("power_menu_action_add_" .. sType), "radial_power_action_" .. sType, unpack(aSubMenus));
+			table.remove(aSubMenus); -- The position needs to be there temporarily for unpacking, but nothing more.
 		end
-
-		table.insert(aSubMenus, nPosition);
-		w.registerMenuItem(Interface.getString("power_menu_action_add_" .. sType), "radial_power_action_" .. sType, unpack(aSubMenus));
-		table.remove(aSubMenus); -- The position needs to be there temporarily for unpacking, but nothing more.
-	end
-
-	if _tHandlers and _tHandlers.fnParse then
-		w.registerMenuItem(Interface.getString("power_menu_action_reparse"), "textlist", 4);
 	end
 end
 
 function onDefaultPowerMenuSelection(w, selection, ...)
 	local aSubSelections = {...};
-	if selection == 6 and aSubSelections[1] == 7 then
-		DB.deleteNode(w.getDatabaseNode());
-	elseif selection == 4 then
-		PowerManagerCore.parsePower(w.getDatabaseNode());
-		if w.activatedetail then
-			w.activatedetail.setValue(1);
-		end
-	elseif selection == 3 then
-		local nSubSelections = #aSubSelections;
+	local nSubSelections = #aSubSelections;
+	if (selection == 3) and (nSubSelections > 1) then
 		local nIndexOffset = 6 * (nSubSelections - 1); -- Six actions per submenu.
 		local nFinalSelection = aSubSelections[nSubSelections];
-		nFinalSelection = ((nFinalSelection + 6) % 8) + 1; -- Account for initial offset in each menu.
-		if nFinalSelection > getDefaultPowerMenuSkipPosition(nIndexOffset + nFinalSelection) then
-			nFinalSelection = nFinalSelection - 1;
-		end
-
-		local nActionIndex = nIndexOffset + nFinalSelection;
+		local nIndex = nIndexOffset + resolveDefaultPowerMenuSelection(nDepth, nFinalSelection);
 		local aTypes = PowerActionManagerCore.getSortedActionTypes();
 		local sType = aTypes[nActionIndex];
 		if sType then
 			PowerManagerCore.createPowerAction(w, sType);
 		end
+	else
+		onDefaultPowerMenuSelectionOriginal(w, selection, ...)
 	end
 end
 
-function getDefaultPowerMenuSkipPosition(nActionIndex)
-	if nActionIndex > 7 then
-		return 5;
-	else
-		return 7;
-	end
+function resolveDefaultPowerMenuPosition(nDepth, nSubIndex)
+	-- The ruleset layer (depth 0) pivots around position 7 and each submenu moves forward by 3.
+	-- 1 must be subtracted and re-added to account for 1-based indexing.
+	return ((nSubIndex + 6 + (3 * nDepth)) % 8) + 1;
+end
+
+function resolveDefaultPowerMenuSelection(nDepth, nPosition)
+	-- The ruleset layer (depth 0) pivots around position 7 and each submenu moves forward by 3.
+	return 7 - ((6 + (3 * nDepth) - nPosition) % 8);
 end
 
 function getActionButtonIcons(node, tData)
