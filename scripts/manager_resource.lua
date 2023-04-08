@@ -449,11 +449,12 @@ function spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent,
 			nNewTotal = nNewTotal + nCurrent;
 		end
 
+		local nDiff = nTotal - nNewTotal;
 		nRemaining = nNewTotal;
-		nOverflow = math.abs(nAdjust);
+		nOverflow = math.abs(nDiff);
 
 		if bTrackSpent then
-			setSpentResource(rActor, sResource, nTotal - nNewTotal);
+			setSpentResource(rActor, sResource, nDiff);
 		end
 	else
 		nRemaining = nTotal;
