@@ -224,7 +224,8 @@ function applyResourceGain(rSource, rTarget, bSecret, nTotal, sOperation, sResou
 		icon = "roll_resource_gain"
 	};
 
-	if bAll and nOverflow < 0 then
+	-- TODO Figure out better indication of using a Gain All action on an unlimited resource
+	if false then
 		msgLong.text = string.format(Interface.getString("resource_action_result_no_limit"), sResource, nRemaining);
 	else
 		local sGain;

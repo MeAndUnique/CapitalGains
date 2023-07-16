@@ -243,15 +243,21 @@ end
 
 function getNodeAdjustmentFunction(nodeCurrent, nodeLimit, bInvert, bZeroIsUnlimited)
 	return function(nValue)
+		local nCurrent = nodeCurrent.getValue() or 0;
+
 		local nLimit = 0;
 		if nodeLimit then
 			nLimit = nodeLimit.getValue();
 		end
 		if bZeroIsUnlimited and (nLimit == 0) then
-			nLimit = math.huge;
+			-- Prevent gaining an unlimited amount of resource
+			if nValue == math.huge then
+				nLimit = nCurrent;
+			else
+				nLimit = math.huge;
+			end
 		end
 
-		local nCurrent = nodeCurrent.getValue() or 0;
 		if bInvert then
 			nCurrent = nLimit - nCurrent; -- The current value node spends up instead of down.
 		else
@@ -451,7 +457,7 @@ function spendResource(rActor, sResource, nAdjust, bAllowOverSpend, bTrackSpent,
 
 		local nDiff = nTotal - nNewTotal;
 		nRemaining = nNewTotal;
-		nOverflow = math.abs(nDiff);
+		nOverflow = nAdjust;
 
 		if bTrackSpent then
 			setSpentResource(rActor, sResource, nDiff);
